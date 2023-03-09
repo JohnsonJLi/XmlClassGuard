@@ -2,12 +2,7 @@ package com.xml.guard.tasks
 
 import com.android.build.gradle.BaseExtension
 import com.xml.guard.entensions.GuardExtension
-import com.xml.guard.utils.AgpVersion
-import com.xml.guard.utils.allDependencyAndroidProjects
-import com.xml.guard.utils.insertImportXxxIfAbsent
-import com.xml.guard.utils.javaDirs
-import com.xml.guard.utils.manifestFile
-import com.xml.guard.utils.replaceWords
+import com.xml.guard.utils.*
 import groovy.xml.XmlParser
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -39,10 +34,14 @@ open class PackageChangeTask @Inject constructor(
     private fun Project.changePackage(map: Map<String, String>) {
         //1.修改 build.gradle namespace
         val namespace = modifyBuildGradleFile(map)
+        println("map : $map")
         //2.修改AndroidManifest.xml文件
-        val pair = modifyManifestFile(map, namespace) ?: return
+        val pair = modifyManifestFile(map, namespace) ?: "com.xiaoyu.lanling" to "com.huayuan.love"
+        println("pair : $pair")
         val oldPackage = pair.first
         val newPackage = pair.second
+
+        println("flavor1 : ${guardExtension.flavor}")
         //3.修改 kt/java文件
         files("src/main/java").asFileTree.forEach { javaFile ->
             javaFile.readText()
@@ -52,14 +51,44 @@ open class PackageChangeTask @Inject constructor(
                 .let { javaFile.writeText(it) }
         }
 
+        println("flavor2 : ${guardExtension.flavor}")
+        if (!guardExtension.flavor.isNullOrEmpty()) {
+
+
+            //3.修改 kt/java文件
+            files("src/${guardExtension.flavor}/java").asFileTree.forEach { javaFile ->
+                println("javaFile : ${javaFile}")
+                javaFile.readText()
+                    .replaceWords("$oldPackage.R", "$newPackage.R")
+                    .replaceWords("$oldPackage.BuildConfig", "$newPackage.BuildConfig")
+                    .replaceWords("$oldPackage.databinding", "$newPackage.databinding")
+                    .let { javaFile.writeText(it) }
+            }
+
+            //3.对旧包名下的直接子类，检测R类、BuildConfig类是否有用到，有的话，插入import语句
+            javaDirs(oldPackage.replace(".", File.separator), flavor = guardExtension.flavor!!)
+                .forEach {
+                    println("javaDirs 2 : ${it}")
+                    it.listFiles { f -> !f.isDirectory }
+                        ?.forEach { file ->
+                            println("javaDirs file 2 : ${file}")
+                            file.insertImportXxxIfAbsent(newPackage)
+                        }
+                }
+
+        }
+
         //3.对旧包名下的直接子类，检测R类、BuildConfig类是否有用到，有的话，插入import语句
         javaDirs(oldPackage.replace(".", File.separator))
             .forEach {
+                println("javaDirs 1 : ${it}")
                 it.listFiles { f -> !f.isDirectory }
-                ?.forEach { file ->
-                    file.insertImportXxxIfAbsent(newPackage)
-                }
+                    ?.forEach { file ->
+                        println("javaDirs file 1 : ${file}")
+                        file.insertImportXxxIfAbsent(newPackage)
+                    }
             }
+
     }
 
     //修复build.gradle文件的 namespace 语句，并返回namespace

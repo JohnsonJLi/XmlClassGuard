@@ -37,6 +37,9 @@ open class MoveDirTask @Inject constructor(
             name.startsWith("layout") || name.startsWith("navigation")
         }?.toMutableList() ?: mutableListOf()
         listFiles.add(manifestFile())
+
+
+
         println("${guardExtension.flavor}")
         if (!guardExtension.flavor.isNullOrEmpty()) {
             resDir(flavor = guardExtension.flavor!!).also {
@@ -47,13 +50,16 @@ open class MoveDirTask @Inject constructor(
             }?.toMutableList()?.let {
                 listFiles.addAll(it)
             }
-            javaDirs(guardExtension.flavor!!).let {
+            javaDirs(flavor = guardExtension.flavor!!).let {
                 println("${guardExtension.flavor} javaDirs : $it")
                 listFiles.addAll(it)
             }
         }
-        listFiles.addAll(javaDirs())
+
+
+        listFiles.addAll(javaDirs().also { println("main javaDirs : $it") })
         files(listFiles).asFileTree.forEach {
+            println("replaceText : $it")
             it.replaceText(moveFile, manifestPackage)
         }
 
@@ -63,9 +69,11 @@ open class MoveDirTask @Inject constructor(
                 if (!oldDir.exists()) {
                     continue
                 }
+                println("111 oldDir : $oldDir  oldPath : $oldPath  manifestPackage : $manifestPackage")
                 if (oldPath == manifestPackage) {
                     //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
                     oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
+                        println("111 file : $file")
                         file.insertImportXxxIfAbsent(oldPath)
                     }
                 }
@@ -76,19 +84,21 @@ open class MoveDirTask @Inject constructor(
                 delete(oldDir)
             }
             if (!guardExtension.flavor.isNullOrEmpty()) {
-                for (oldDir in javaDirs(oldPath.replace(".", File.separator), guardExtension.flavor!!)) {
+                for (oldDir in javaDirs(oldPath.replace(".", File.separator), flavor = guardExtension.flavor!!)) {
                     if (!oldDir.exists()) {
                         continue
                     }
+                    println("oldDir : $oldDir  oldPath : $oldPath  manifestPackage : $manifestPackage")
                     if (oldPath == manifestPackage) {
                         //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
                         oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
+                            println("file : $file")
                             file.insertImportXxxIfAbsent(oldPath)
                         }
                     }
                     copy {
                         it.from(oldDir)
-                        it.into(javaDir(newPath.replace(".", File.separator), oldDir.absolutePath, guardExtension.flavor!!))
+                        it.into(javaDir(newPath.replace(".", File.separator), oldDir.absolutePath, flavor = guardExtension.flavor!!))
                     }
                     delete(oldDir)
                 }
