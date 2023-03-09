@@ -3,10 +3,26 @@ apply plugin: 'maven-publish'
 publishing {
     publications {
         release(MavenPublication) {
+//            from components.java
+//            groupId 'com.github.liujingxing'
+//            artifactId 'XmlClassGuard'
+//            version "$plugin_version"
+
+            groupId = POM_GROUP
+            artifactId = POM_ARTIFACT_ID
+            version = POM_VERSION_NAME
+
             from components.java
-            groupId 'com.github.liujingxing'
-            artifactId 'XmlClassGuard'
-            version "$plugin_version"
+        }
+    }
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url POM_VERSION_NAME.endsWith('SNAPSHOT') ? POM_MAVEN_URL_SNAPSHOT : POM_MAVEN_URL
+            credentials {
+                username POM_MAVEN_NAME
+                password POM_MAVEN_PASSWORD
+            }
         }
     }
 }

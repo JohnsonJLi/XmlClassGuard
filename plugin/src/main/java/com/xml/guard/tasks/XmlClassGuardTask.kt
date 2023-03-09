@@ -2,18 +2,7 @@ package com.xml.guard.tasks
 
 import com.xml.guard.entensions.GuardExtension
 import com.xml.guard.model.MappingParser
-import com.xml.guard.utils.allDependencyAndroidProjects
-import com.xml.guard.utils.findClassByLayoutXml
-import com.xml.guard.utils.findClassByManifest
-import com.xml.guard.utils.findClassByNavigationXml
-import com.xml.guard.utils.findLocationProject
-import com.xml.guard.utils.findPackage
-import com.xml.guard.utils.getDirPath
-import com.xml.guard.utils.javaDirs
-import com.xml.guard.utils.manifestFile
-import com.xml.guard.utils.removeSuffix
-import com.xml.guard.utils.replaceWords
-import com.xml.guard.utils.resDir
+import com.xml.guard.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
@@ -40,9 +29,12 @@ open class XmlClassGuardTask @Inject constructor(
     fun execute() {
         val androidProjects = allDependencyAndroidProjects()
         //1、遍历res下的xml文件，找到自定义的类(View/Fragment/四大组件等)，并将混淆结果同步到xml文件内
-        androidProjects.forEach { handleResDir(it) }
+        androidProjects.forEach {
+            handleResDir(it)
+        }
         //2、混淆文件名及文件路径，返回本次混淆的类
         val classMapping = mapping.obfuscateAllClass(project)
+        println("classMapping : $classMapping")
         //3、替换Java/kotlin文件里引用到的类
         if (classMapping.isNotEmpty()) {
             androidProjects.forEach { replaceJavaText(it, classMapping) }

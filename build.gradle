@@ -1,15 +1,92 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
+    ext {
+        kotlin_version = '1.5.30'
+        booster_version = '4.10.0'
+        debug = gradle.startParameter.taskNames.any { it.contains('debug') || it.contains('Debug') }
+
+    }
+    repositories {
+        maven {
+            url 'http://nexus.yizhoucp.cn/repository/maven-all/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/jcenter'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/central'
+        }
+        maven {
+            url "http://maven.aliyun.com/nexus/content/repositories/releases"
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/releases'
+        }
+        maven { url 'https://jitpack.io' }
+        maven {
+            allowInsecureProtocol = true
+            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        mavenCentral()
+        jcenter()
+        google()
+
+    }
     dependencies {
-        classpath "com.bytedance.android:aabresguard-plugin:0.1.10"
-        classpath "com.github.liujingxing:XmlClassGuard:$plugin_version"
+        configurations.all {
+            resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+            resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+        }
+
+        classpath 'com.android.tools.build:gradle:4.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+//        classpath "com.getkeepsafe.dexcount:dexcount-gradle-plugin:3.0.1"
+//        if (!debug) {
+//        classpath "com.didiglobal.booster:booster-gradle-plugin:$booster_version"
+//        classpath "com.didiglobal.booster:booster-transform-thread:$booster_version"
+//        }
+//        if (PLUGIN_ENABLE.toBoolean()) {
+//            classpath("com.xiaoyu.android:android-junk-code:1.1.7.3-SNAPSHOT") { changing = true }
+//        classpath("com.github.qq549631030:android-junk-code:1.1.7") { changing = true }
+//        }
+
+//        classpath 'com.tencent.mm:AndResGuard-gradle-plugin:1.2.21'
+//        classpath "com.github.liujingxing:XmlClassGuard:1.1.2"
+//        classpath("com.xiaoyu.android:XmlClassGuard:1.1.3.0-SNAPSHOT") { changing = true }
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+
+        classpath "com.bytedance.android:aabresguard-plugin:0.1.0"
     }
 }
 
-plugins {
-    id 'com.android.application' version '7.4.1' apply false
-    id 'com.android.library' version '7.4.1' apply false
-    id 'org.jetbrains.kotlin.android' version '1.8.0' apply false
+allprojects {
+    repositories {
+        maven {
+            url 'http://nexus.yizhoucp.cn/repository/maven-all/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/jcenter'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/central'
+        }
+        maven {
+            url "http://maven.aliyun.com/nexus/content/repositories/releases"
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/releases'
+        }
+        maven { url 'https://jitpack.io' }
+        maven {
+            allowInsecureProtocol = true
+            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        mavenCentral()
+        jcenter()
+        google()
+    }
 }
 
 task clean(type: Delete) {
