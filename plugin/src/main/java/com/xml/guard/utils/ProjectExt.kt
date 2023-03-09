@@ -39,8 +39,8 @@ fun Project.findPackage(): String {
     return rootNode.attribute("package").toString()
 }
 
-fun Project.javaDir(path: String, lookPath: String): File {
-    val javaDirs = javaDirs("")
+fun Project.javaDir(path: String, lookPath: String, flavor: String = "main"): File {
+    val javaDirs = javaDirs("", flavor)
     if (lookPath.isEmpty()) {
         return file("${javaDirs[0]}/$path")
     }
@@ -52,13 +52,13 @@ fun Project.javaDir(path: String, lookPath: String): File {
     return file("${javaDirs[0]}/$path")
 }
 
-fun Project.javaDirs(path: String = ""): List<File> {
+fun Project.javaDirs(path: String = "", flavor: String = "main"): List<File> {
     val sourceSet = (extensions.getByName("android") as BaseExtension).sourceSets
-    val javaDirs = sourceSet.getByName("main").java.srcDirs
+    val javaDirs = sourceSet.getByName(flavor).java.srcDirs
     return javaDirs.map { file("$it/$path") }
 }
 
-fun Project.resDir(path: String = ""): File = file("src/main/res/$path")
+fun Project.resDir(path: String = "", flavor: String = "main"): File = file("src/$flavor/res/$path")
 
 fun Project.manifestFile(): File = file("src/main/AndroidManifest.xml")
 

@@ -26,4 +26,6 @@ open class GuardExtension {
     var packageChange = HashMap<String, String>()
 
     var moveDir = HashMap<String, String>()
+
+    var flavor: String? = null
 }

@@ -2,7 +2,6 @@ package com.xml.guard.tasks
 
 import com.xml.guard.entensions.GuardExtension
 import com.xml.guard.utils.*
-import groovy.xml.XmlParser
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
@@ -38,6 +37,21 @@ open class MoveDirTask @Inject constructor(
             name.startsWith("layout") || name.startsWith("navigation")
         }?.toMutableList() ?: mutableListOf()
         listFiles.add(manifestFile())
+        println("${guardExtension.flavor}")
+        if (!guardExtension.flavor.isNullOrEmpty()) {
+            resDir(flavor = guardExtension.flavor!!).also {
+                println("${guardExtension.flavor} resDir : $it")
+            }.listFiles { _, name ->
+                //过滤res目录下的layout、navigation目录
+                name.startsWith("layout") || name.startsWith("navigation")
+            }?.toMutableList()?.let {
+                listFiles.addAll(it)
+            }
+            javaDirs(guardExtension.flavor!!).let {
+                println("${guardExtension.flavor} javaDirs : $it")
+                listFiles.addAll(it)
+            }
+        }
         listFiles.addAll(javaDirs())
         files(listFiles).asFileTree.forEach {
             it.replaceText(moveFile, manifestPackage)
@@ -60,6 +74,24 @@ open class MoveDirTask @Inject constructor(
                     it.into(javaDir(newPath.replace(".", File.separator), oldDir.absolutePath))
                 }
                 delete(oldDir)
+            }
+            if (!guardExtension.flavor.isNullOrEmpty()) {
+                for (oldDir in javaDirs(oldPath.replace(".", File.separator), guardExtension.flavor!!)) {
+                    if (!oldDir.exists()) {
+                        continue
+                    }
+                    if (oldPath == manifestPackage) {
+                        //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
+                        oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
+                            file.insertImportXxxIfAbsent(oldPath)
+                        }
+                    }
+                    copy {
+                        it.from(oldDir)
+                        it.into(javaDir(newPath.replace(".", File.separator), oldDir.absolutePath, guardExtension.flavor!!))
+                    }
+                    delete(oldDir)
+                }
             }
         }
     }
