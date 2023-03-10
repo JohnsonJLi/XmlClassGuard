@@ -28,7 +28,7 @@ open class FlavorXmlClassGuardTask @Inject constructor(
 
     @TaskAction
     fun execute() {
-        configFile = project.assetsPath("init/config")
+        configFile = guardExtension.assetsConfigPath?.let { project.assetsPath(it) }
         val androidProjects = allDependencyAndroidProjects()
         //1、遍历res下的xml文件，找到自定义的类(View/Fragment/四大组件等)，并将混淆结果同步到xml文件内
         androidProjects.forEach {
@@ -39,7 +39,6 @@ open class FlavorXmlClassGuardTask @Inject constructor(
         }
         //2、混淆文件名及文件路径，返回本次混淆的类
         val classMapping = mapping.obfuscateAllClass(project, guardExtension)
-        println("classMapping : $classMapping")
         //3、替换Java/kotlin文件里引用到的类
         if (classMapping.isNotEmpty()) {
             androidProjects.forEach {
@@ -52,13 +51,17 @@ open class FlavorXmlClassGuardTask @Inject constructor(
 
     //处理res目录
     private fun handleResDir(project: Project, flavor: String = "main") {
-        val listFiles = project.resDir(flavor = flavor).listFiles { _, name ->
-            //过滤res目录下的layout、navigation目录
-            name.startsWith("layout") || name.startsWith("navigation")
-        }?.toMutableList() ?: return
-        listFiles.add(project.manifestFile())
-        project.files(listFiles).asFileTree.forEach { xmlFile ->
-            guardXml(project, xmlFile, guardExtension)
+        try {
+            val listFiles = project.resDir(flavor = flavor).listFiles { _, name ->
+                //过滤res目录下的layout、navigation目录
+                name.startsWith("layout") || name.startsWith("navigation")
+            }?.toMutableList() ?: return
+            listFiles.add(project.manifestFile())
+            project.files(listFiles).asFileTree.forEach { xmlFile ->
+                guardXml(project, xmlFile, guardExtension)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

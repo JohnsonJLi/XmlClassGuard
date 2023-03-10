@@ -48,27 +48,31 @@ open class PackageChangeTask @Inject constructor(
                 .let { javaFile.writeText(it) }
         }
 
-        println("flavor2 : ${guardExtension.flavor}")
-        if (!guardExtension.flavor.isNullOrEmpty()) {
-            //3.修改 kt/java文件
-            files("src/${guardExtension.flavor}/java").asFileTree.forEach { javaFile ->
-                javaFile.readText()
-                    .replaceWords("$oldPackage.R", "$newPackage.R")
-                    .replaceWords("$oldPackage.BuildConfig", "$newPackage.BuildConfig")
-                    .replaceWords("$oldPackage.databinding", "$newPackage.databinding")
-                    .let { javaFile.writeText(it) }
-            }
-
-            //3.对旧包名下的直接子类，检测R类、BuildConfig类是否有用到，有的话，插入import语句
-            javaDirs(oldPackage.replace(".", File.separator), flavor = guardExtension.flavor!!)
-                .forEach {
-                    it.listFiles { f -> !f.isDirectory }
-                        ?.forEach { file ->
-                            file.insertImportXxxIfAbsent(newPackage)
-                        }
+        try {
+            if (!guardExtension.flavor.isNullOrEmpty()) {
+                //3.修改 kt/java文件
+                files("src/${guardExtension.flavor}/java").asFileTree.forEach { javaFile ->
+                    javaFile.readText()
+                        .replaceWords("$oldPackage.R", "$newPackage.R")
+                        .replaceWords("$oldPackage.BuildConfig", "$newPackage.BuildConfig")
+                        .replaceWords("$oldPackage.databinding", "$newPackage.databinding")
+                        .let { javaFile.writeText(it) }
                 }
 
+                //3.对旧包名下的直接子类，检测R类、BuildConfig类是否有用到，有的话，插入import语句
+                javaDirs(oldPackage.replace(".", File.separator), flavor = guardExtension.flavor!!)
+                    .forEach {
+                        it.listFiles { f -> !f.isDirectory }
+                            ?.forEach { file ->
+                                file.insertImportXxxIfAbsent(newPackage)
+                            }
+                    }
+
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+
 
         //3.对旧包名下的直接子类，检测R类、BuildConfig类是否有用到，有的话，插入import语句
         javaDirs(oldPackage.replace(".", File.separator))

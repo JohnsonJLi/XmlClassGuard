@@ -21,10 +21,13 @@ open class MoveDirTask @Inject constructor(
         group = "guard"
     }
 
+    private var configFile: File? = null
+
     @TaskAction
     fun execute() {
         val moveFile = guardExtension.moveDir
         if (moveFile.isEmpty()) return
+        configFile = guardExtension.assetsConfigPath?.let { project.assetsPath(it) }
         val androidProjects = allDependencyAndroidProjects()
         androidProjects.forEach { it.moveDir(moveFile) }
     }
@@ -39,18 +42,20 @@ open class MoveDirTask @Inject constructor(
         listFiles.add(manifestFile())
 
 
-
-        println("${guardExtension.flavor}")
-        if (!guardExtension.flavor.isNullOrEmpty()) {
-            resDir(flavor = guardExtension.flavor!!).listFiles { _, name ->
-                //过滤res目录下的layout、navigation目录
-                name.startsWith("layout") || name.startsWith("navigation")
-            }?.toMutableList()?.let {
-                listFiles.addAll(it)
+        try {
+            if (!guardExtension.flavor.isNullOrEmpty()) {
+                resDir(flavor = guardExtension.flavor!!).listFiles { _, name ->
+                    //过滤res目录下的layout、navigation目录
+                    name.startsWith("layout") || name.startsWith("navigation")
+                }?.toMutableList()?.let {
+                    listFiles.addAll(it)
+                }
+                javaDirs(flavor = guardExtension.flavor!!).let {
+                    listFiles.addAll(it)
+                }
             }
-            javaDirs(flavor = guardExtension.flavor!!).let {
-                listFiles.addAll(it)
-            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
 
 
@@ -68,7 +73,6 @@ open class MoveDirTask @Inject constructor(
                 if (oldPath == manifestPackage) {
                     //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
                     oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
-                        println("111 file : $file")
                         file.insertImportXxxIfAbsent(oldPath)
                     }
                 }
@@ -78,23 +82,27 @@ open class MoveDirTask @Inject constructor(
                 }
                 delete(oldDir)
             }
-            if (!guardExtension.flavor.isNullOrEmpty()) {
-                for (oldDir in javaDirs(oldPath.replace(".", File.separator), flavor = guardExtension.flavor!!)) {
-                    if (!oldDir.exists()) {
-                        continue
-                    }
-                    if (oldPath == manifestPackage) {
-                        //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
-                        oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
-                            file.insertImportXxxIfAbsent(oldPath)
+            try {
+                if (!guardExtension.flavor.isNullOrEmpty()) {
+                    for (oldDir in javaDirs(oldPath.replace(".", File.separator), flavor = guardExtension.flavor!!)) {
+                        if (!oldDir.exists()) {
+                            continue
                         }
+                        if (oldPath == manifestPackage) {
+                            //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
+                            oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
+                                file.insertImportXxxIfAbsent(oldPath)
+                            }
+                        }
+                        copy {
+                            it.from(oldDir)
+                            it.into(javaDir(newPath.replace(".", File.separator), oldDir.absolutePath, flavor = guardExtension.flavor!!))
+                        }
+                        delete(oldDir)
                     }
-                    copy {
-                        it.from(oldDir)
-                        it.into(javaDir(newPath.replace(".", File.separator), oldDir.absolutePath, flavor = guardExtension.flavor!!))
-                    }
-                    delete(oldDir)
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -106,6 +114,11 @@ open class MoveDirTask @Inject constructor(
                 replaceText.replaceWords("$oldPath.", "$newPath.")
                     .replaceWords("""android:name=".""", """android:name="${newPath}.""")
             } else {
+                configFile?.let { file ->
+                    var readText = file.readText()
+                    readText = FileUtils.replaceText(file, readText, oldPath, newPath)
+                    file.writeText(readText)
+                }
                 replaceText.replaceWords(oldPath, newPath)
             }
             if (name.endsWith(".kt") || name.endsWith(".java")) {

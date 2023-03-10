@@ -28,4 +28,6 @@ open class GuardExtension {
     var moveDir = HashMap<String, String>()
 
     var flavor: String? = null
+
+    var assetsConfigPath: String? = null
 }
