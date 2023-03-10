@@ -37,6 +37,9 @@ open class PackageChangeTask @Inject constructor(
         //2.修改AndroidManifest.xml文件
         val pair = modifyManifestFile(map, namespace) ?: return
         val oldPackage = pair.first
+        val oldSyntheticName = oldPackage.getSuffixName()
+        println("oldSyntheticName : $oldSyntheticName")
+
         val newPackage = pair.second
 
         //3.修改 kt/java文件
@@ -56,6 +59,7 @@ open class PackageChangeTask @Inject constructor(
                         .replaceWords("$oldPackage.R", "$newPackage.R")
                         .replaceWords("$oldPackage.BuildConfig", "$newPackage.BuildConfig")
                         .replaceWords("$oldPackage.databinding", "$newPackage.databinding")
+                        .replaceWords("kotlinx.android.synthetic.$oldSyntheticName", "kotlinx.android.synthetic.${guardExtension.flavor}")
                         .let { javaFile.writeText(it) }
                 }
 
