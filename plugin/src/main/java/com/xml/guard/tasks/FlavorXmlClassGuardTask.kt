@@ -24,9 +24,11 @@ open class FlavorXmlClassGuardTask @Inject constructor(
 
     private val mappingFile = guardExtension.mappingFile ?: project.file("flavor-xml-class-mapping.txt")
     private val mapping = MappingParser.parse(mappingFile)
+    private var configFile: File? = null
 
     @TaskAction
     fun execute() {
+        configFile = project.assetsPath("init/config")
         val androidProjects = allDependencyAndroidProjects()
         //1、遍历res下的xml文件，找到自定义的类(View/Fragment/四大组件等)，并将混淆结果同步到xml文件内
         androidProjects.forEach {
@@ -109,17 +111,31 @@ open class FlavorXmlClassGuardTask @Inject constructor(
             }
             javaFile.writeText(replaceText)
         }
-        if (!guardExtension.flavor.isNullOrEmpty()){
-            val javaDirs = project.javaDirs(flavor = guardExtension.flavor!!)
-            //遍历所有Java\Kt文件，替换混淆后的类的引用，import及new对象的地方
-            project.files(*javaDirs.toTypedArray()).asFileTree.forEach { javaFile ->
-                var replaceText = javaFile.readText()
-                mapping.forEach {
-                    replaceText = replaceText(javaFile, replaceText, it.key, it.value)
+        if (!guardExtension.flavor.isNullOrEmpty()) {
+            try {
+                val javaDirs = project.javaDirs(flavor = guardExtension.flavor!!)
+                //遍历所有Java\Kt文件，替换混淆后的类的引用，import及new对象的地方
+                project.files(*javaDirs.toTypedArray()).asFileTree.forEach { javaFile ->
+                    var replaceText = javaFile.readText()
+                    mapping.forEach {
+                        replaceText = replaceText(javaFile, replaceText, it.key, it.value)
+                    }
+                    javaFile.writeText(replaceText)
                 }
-                javaFile.writeText(replaceText)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
+
         }
+
+        configFile?.let { file ->
+            var replaceText = file.readText()
+            mapping.forEach {
+                replaceText = replaceText(file, replaceText, it.key, it.value)
+            }
+            file.writeText(replaceText)
+        }
+
     }
 
     private fun replaceText(

@@ -58,6 +58,15 @@ fun Project.javaDirs(path: String = "", flavor: String = "main"): List<File> {
     return javaDirs.map { file("$it/$path") }
 }
 
+fun Project.assetsPath(path: String, flavor: String = "main"): File? {
+    val sourceSet = (extensions.getByName("android") as BaseExtension).sourceSets
+    val javaDirs = sourceSet.getByName(flavor).assets.srcDirs
+    project.files(*javaDirs.toTypedArray()).asFileTree.forEach { file ->
+        if (file.path.contains(path)) return file
+    }
+    return null
+}
+
 fun Project.resDir(path: String = "", flavor: String = "main"): File = file("src/$flavor/res/$path")
 
 fun Project.manifestFile(): File = file("src/main/AndroidManifest.xml")
