@@ -28,6 +28,9 @@ open class FlavorXmlClassGuardTask @Inject constructor(
 
     @TaskAction
     fun execute() {
+        if (guardExtension.flavor.isNullOrEmpty()) {
+            return
+        }
         configFile = guardExtension.assetsConfigPath?.let { project.assetsPath(it) }
         val androidProjects = allDependencyAndroidProjects()
         //1、遍历res下的xml文件，找到自定义的类(View/Fragment/四大组件等)，并将混淆结果同步到xml文件内
@@ -84,11 +87,24 @@ open class FlavorXmlClassGuardTask @Inject constructor(
             }
         }
         for (classPath in classPaths) {
+            println("classPath : $classPath")
+            if (classPath.contains(".wxapi.") || classPath.contains("huayuan.love.push.")) continue
+
             val dirPath = classPath.getDirPath()
+            var exist = false
+            if (!guardExtension.flavor.isNullOrEmpty()) {
+                exist = null != project.findLocationProject(dirPath, flavor = guardExtension.flavor!!)
+            }
             //本地不存在这个文件
-            if (project.findLocationProject(dirPath) == null) continue
+            if (!exist && project.findLocationProject(dirPath) == null) {
+                println("findLocationProject : $classPath")
+                continue
+            }
             //已经混淆了这个类
-            if (mapping.isObfuscated(classPath)) continue
+            if (mapping.isObfuscated(classPath)) {
+                println("isObfuscated : $classPath")
+                continue
+            }
             val obfuscatePath = mapping.renamePath(classPath, guardExtension.flavor!!)
             xmlText = xmlText.replaceWords(classPath, obfuscatePath)
             if (packageName != null && classPath.startsWith(packageName)) {
@@ -97,6 +113,7 @@ open class FlavorXmlClassGuardTask @Inject constructor(
 
             // 内部类没有混淆，删除
             if (mapping.isXmlInnerClass(classPath)) {
+                println("classMapping remove : $classPath")
                 mapping.classMapping.remove(classPath)
             }
         }

@@ -46,47 +46,77 @@ class Mapping {
     fun obfuscateAllClass(project: Project, guardExtension: GuardExtension? = null): Map<String, String> {
         val classMapped = mutableMapOf<String, String>()
         val iterator = dirMapping.iterator()
-        println("dirMapping : ${dirMapping}")
         while (iterator.hasNext()) {
             val entry = iterator.next()
             val rawDir = entry.key
-            val locationProject = project.findLocationProject(rawDir)
+            println("rawDir : $rawDir = ${entry.value}")
+            var locationProject = project.findLocationProject(rawDir)
+
             if (locationProject == null) {
+                if (!guardExtension?.flavor.isNullOrEmpty()) {
+                    locationProject = project.findLocationProject(rawDir, flavor = guardExtension!!.flavor!!)
+                    if (locationProject != null) {
+                        fileRename(locationProject, rawDir, guardExtension.flavor!!, classMapped, guardExtension.flavor!!)
+                        continue
+                    }
+                }
                 iterator.remove()
                 continue
             }
-            val manifestPackage = locationProject.findPackage()
-            //去除目录的直接子文件
-            val dirPath = rawDir.replace(".", File.separator)
-            val childFiles = locationProject.javaDirs(dirPath).flatMap {
-                it.listFiles { f ->
-                    val filename = f.name
-                    f.isFile && (filename.endsWith(".java") || filename.endsWith(".kt"))
-                }?.toList() ?: emptyList()
-            }
+            fileRename(locationProject, rawDir, "main", classMapped, guardExtension!!.flavor!!)
 
-            if (childFiles.isEmpty()) continue
-            for (file in childFiles) {
-                val rawClassPath = "${rawDir}.${file.name.removeSuffix()}"
-                //已经混淆
-                if (isObfuscated(rawClassPath)) continue
-                if (rawDir == manifestPackage) {
-                    file.insertImportXxxIfAbsent(manifestPackage)
-                }
-//                val obfuscatePath = obfuscatePath(rawClassPath)
-
-                println("flavor : ${guardExtension?.flavor}")
-                val obfuscatePath = guardExtension?.flavor?.let { return@let renamePath(rawClassPath, it) } ?: obfuscatePath(rawClassPath)
-                println("obfuscatePath : $obfuscatePath")
-                val relativePath = obfuscatePath.replace(".", File.separator) + file.name.getSuffix()
-                val newFile = locationProject.javaDir(relativePath, file.absolutePath)
-                if (!newFile.exists()) newFile.parentFile.mkdirs()
-                newFile.writeText(file.readText())
-                file.delete()
-                classMapped[rawClassPath] = obfuscatePath
+            locationProject = project.findLocationProject(rawDir, flavor = guardExtension.flavor!!)
+            if (locationProject != null) {
+                fileRename(locationProject, rawDir, guardExtension.flavor!!, classMapped, guardExtension.flavor!!)
             }
         }
         return classMapped
+    }
+
+    private fun fileRename(
+        locationProject: Project,
+        rawDir: String,
+        flavor: String,
+        classMapped: MutableMap<String, String>,
+        prefix: String
+    ) {
+        val manifestPackage = locationProject.findPackage()
+        //去除目录的直接子文件
+        val dirPath = rawDir.replace(".", File.separator)
+
+
+        val childFiles = locationProject.javaDirs(dirPath, flavor = flavor).flatMap {
+            println("file : $it")
+            val files = it.listFiles { f ->
+                val filename = f.name
+                f.isFile && (filename.endsWith(".java") || filename.endsWith(".kt"))
+            }?.toList() ?: mutableListOf()
+            files
+        }
+        if (childFiles.isEmpty()) {
+            println("childFiles isEmpty : $rawDir")
+            return
+        }
+        for (file in childFiles) {
+            val rawClassPath = "${rawDir}.${file.name.removeSuffix()}"
+            //已经混淆
+            if (isObfuscated(rawClassPath)) {
+                println("isObfuscated : $rawClassPath")
+                continue
+            }
+            if (rawDir == manifestPackage) {
+                file.insertImportXxxIfAbsent(manifestPackage)
+            }
+            //                val obfuscatePath = obfuscatePath(rawClassPath)
+
+            val obfuscatePath = renamePath(rawClassPath, prefix)
+            val relativePath = obfuscatePath.replace(".", File.separator) + file.name.getSuffix()
+            val newFile = locationProject.javaDir(relativePath, file.absolutePath, flavor = flavor)
+            if (!newFile.exists()) newFile.parentFile.mkdirs()
+            newFile.writeText(file.readText())
+            file.delete()
+            classMapped[rawClassPath] = obfuscatePath
+        }
     }
 
     fun isObfuscated(rawClassPath: String) = classMapping.containsValue(rawClassPath)
