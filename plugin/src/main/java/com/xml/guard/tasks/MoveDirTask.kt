@@ -42,24 +42,20 @@ open class MoveDirTask @Inject constructor(
 
         println("${guardExtension.flavor}")
         if (!guardExtension.flavor.isNullOrEmpty()) {
-            resDir(flavor = guardExtension.flavor!!).also {
-                println("${guardExtension.flavor} resDir : $it")
-            }.listFiles { _, name ->
+            resDir(flavor = guardExtension.flavor!!).listFiles { _, name ->
                 //过滤res目录下的layout、navigation目录
                 name.startsWith("layout") || name.startsWith("navigation")
             }?.toMutableList()?.let {
                 listFiles.addAll(it)
             }
             javaDirs(flavor = guardExtension.flavor!!).let {
-                println("${guardExtension.flavor} javaDirs : $it")
                 listFiles.addAll(it)
             }
         }
 
 
-        listFiles.addAll(javaDirs().also { println("main javaDirs : $it") })
+        listFiles.addAll(javaDirs())
         files(listFiles).asFileTree.forEach {
-            println("replaceText : $it")
             it.replaceText(moveFile, manifestPackage)
         }
 
@@ -69,7 +65,6 @@ open class MoveDirTask @Inject constructor(
                 if (!oldDir.exists()) {
                     continue
                 }
-                println("111 oldDir : $oldDir  oldPath : $oldPath  manifestPackage : $manifestPackage")
                 if (oldPath == manifestPackage) {
                     //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
                     oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
@@ -88,11 +83,9 @@ open class MoveDirTask @Inject constructor(
                     if (!oldDir.exists()) {
                         continue
                     }
-                    println("oldDir : $oldDir  oldPath : $oldPath  manifestPackage : $manifestPackage")
                     if (oldPath == manifestPackage) {
                         //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
                         oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
-                            println("file : $file")
                             file.insertImportXxxIfAbsent(oldPath)
                         }
                     }
