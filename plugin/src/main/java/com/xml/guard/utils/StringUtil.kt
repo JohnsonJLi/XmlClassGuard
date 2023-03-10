@@ -21,6 +21,11 @@ fun String.getSuffix(): String {
     return if (index == -1) "" else substring(index)
 }
 
+fun String.getSuffixName(): String {
+    val index = lastIndexOf(".")
+    return if (index == -1) "" else substring(index + 1)
+}
+
 fun String.getDirPath(): String {
     val index = lastIndexOf(".")
     return if (index == -1) this else substring(0, index)
@@ -125,7 +130,8 @@ fun String.to26Long(): Long {
     val isLowercase = Pattern.matches(regexLowercase, this)
     val isUppercase = if (isLowercase) false else Pattern.matches(regexUppercase, this)
     if (!isLowercase && !isUppercase) {
-        throw IllegalArgumentException("string must be uppercase or lowercase but it was $this")
+//        throw IllegalArgumentException("string must be uppercase or lowercase but it was $this")
+        println("string must be uppercase or lowercase but it was $this")
     }
     val offSize = if (isUppercase) 65 else 97
     val length = length

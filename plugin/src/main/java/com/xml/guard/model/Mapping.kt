@@ -1,5 +1,6 @@
 package com.xml.guard.model
 
+import com.xml.guard.entensions.GuardExtension
 import com.xml.guard.utils.*
 import org.gradle.api.Project
 import java.io.BufferedWriter
@@ -42,9 +43,10 @@ class Mapping {
     internal var packageNameIndex = -1L
 
     //遍历文件夹下的所有直接子类，混淆文件名及移动目录
-    fun obfuscateAllClass(project: Project): Map<String, String> {
+    fun obfuscateAllClass(project: Project, guardExtension: GuardExtension? = null): Map<String, String> {
         val classMapped = mutableMapOf<String, String>()
         val iterator = dirMapping.iterator()
+        println("dirMapping : ${dirMapping}")
         while (iterator.hasNext()) {
             val entry = iterator.next()
             val rawDir = entry.key
@@ -62,6 +64,7 @@ class Mapping {
                     f.isFile && (filename.endsWith(".java") || filename.endsWith(".kt"))
                 }?.toList() ?: emptyList()
             }
+
             if (childFiles.isEmpty()) continue
             for (file in childFiles) {
                 val rawClassPath = "${rawDir}.${file.name.removeSuffix()}"
@@ -70,7 +73,11 @@ class Mapping {
                 if (rawDir == manifestPackage) {
                     file.insertImportXxxIfAbsent(manifestPackage)
                 }
-                val obfuscatePath = obfuscatePath(rawClassPath)
+//                val obfuscatePath = obfuscatePath(rawClassPath)
+
+                println("flavor : ${guardExtension?.flavor}")
+                val obfuscatePath = guardExtension?.flavor?.let { return@let renamePath(rawClassPath, it) } ?: obfuscatePath(rawClassPath)
+                println("obfuscatePath : $obfuscatePath")
                 val relativePath = obfuscatePath.replace(".", File.separator) + file.name.getSuffix()
                 val newFile = locationProject.javaDir(relativePath, file.absolutePath)
                 if (!newFile.exists()) newFile.parentFile.mkdirs()
@@ -110,6 +117,49 @@ class Mapping {
         }
         return obfuscateClassPath
     }
+
+    fun renamePath(rawClassPath: String, flavor: String): String {
+        var obfuscateClassPath = classMapping[rawClassPath]
+        println("renamePath obfuscateClassPath : $obfuscateClassPath")
+        if (obfuscateClassPath == null) {
+            val rawPackage = rawClassPath.getDirPath()
+            val rawName = rawClassPath.getSuffixName()
+            var obfuscatePackage = dirMapping[rawPackage]
+            if (obfuscatePackage == null) {
+                dirMapping[rawPackage] = rawPackage
+                obfuscatePackage = rawPackage
+            }
+            // 内部类，如：<service android:name=".TestBroadReceiver$NotifyJobService" />
+            if (isXmlInnerClass(rawClassPath)) {
+                obfuscateClassPath = "$obfuscatePackage.${flavor.capitalize()}${nameHandling(rawName)}"
+                val arr = rawClassPath.split("$")
+                classMapping[arr[0]] = obfuscateClassPath
+
+                // 用于清单文件中替换
+                obfuscateClassPath = "$obfuscateClassPath\$${arr[1]}"
+                classMapping[rawClassPath] = obfuscateClassPath
+            } else {
+                obfuscateClassPath = "$obfuscatePackage.${flavor.capitalize()}${nameHandling(rawName)}"
+                classMapping[rawClassPath] = obfuscateClassPath
+            }
+        }
+        println("renamePath end : $obfuscateClassPath")
+        return obfuscateClassPath
+    }
+
+    private fun nameHandling(rawName: String) =
+        when {
+            (rawName.endsWith("Activity")) -> {
+                rawName.removeRange(rawName.length - 5, rawName.length)
+            }
+            (rawName.endsWith("Fragment")) -> {
+                rawName.removeRange(rawName.length - 4, rawName.length)
+            }
+            (rawName.endsWith("Application")) -> {
+                rawName.removeRange(rawName.length - 8, rawName.length)
+            }
+            else -> rawName
+        }
 
 
     fun writeMappingToFile(mappingFile: File) {
