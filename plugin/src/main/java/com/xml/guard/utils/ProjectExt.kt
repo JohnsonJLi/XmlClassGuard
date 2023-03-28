@@ -54,8 +54,13 @@ fun Project.javaDir(path: String, lookPath: String, flavor: String = "main"): Fi
 
 fun Project.javaDirs(path: String = "", flavor: String = "main"): List<File> {
     val sourceSet = (extensions.getByName("android") as BaseExtension).sourceSets
-    val javaDirs = sourceSet.getByName(flavor).java.srcDirs
-    return javaDirs.map { file("$it/$path") }
+    return try {
+        val javaDirs = sourceSet.getByName(flavor).java.srcDirs
+        javaDirs.map { file("$it/$path") }
+    } catch (e: Exception) {
+        ArrayList()
+    }
+
 }
 
 fun Project.assetsPath(path: String, flavor: String = "main"): File? {

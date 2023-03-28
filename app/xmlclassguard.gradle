@@ -24,6 +24,7 @@ xmlClassGuard {
         //移动目录，支持同时移动多个目录
         moveDir = ["com.ljx.example": "ef.gh",
                    "com.ljx.base"   : "zzzz.hhhh"]
+        flavor = "coudui"
     }
 
     def config2 = {
@@ -47,6 +48,7 @@ xmlClassGuard {
         //移动目录，支持同时移动多个目录
         moveDir = ["com.ljx.example": "test.cd",
                    "com.ljx.base"   : "zzzz.hhhh"]
+        flavor = "huayuan"
     }
     variantConfig {
         xcgDebug config

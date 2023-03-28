@@ -1,7 +1,0 @@
-dir mapping:
-	com.ljx.example -> e
-	com.ljx.example.activity -> dh
-
-class mapping:
-	com.ljx.example.AppHolder -> e.B
-	com.ljx.example.activity.MainActivity -> dh.C

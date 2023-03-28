@@ -38,7 +38,7 @@ class XmlClassGuardPlugin : Plugin<Project> {
                     val xmlClassGuardName = "${variantName}XmlClassGuard"
                     val name = project.name
                     println(variantName)
-                    println("./gradlew  $name:$moveDir $name:$packageChangeName $name:$flavorXmlClassGuardName\n $name:$xmlClassGuardName")
+                    println("./gradlew :$name:$moveDir :$name:$packageChangeName :$name:$flavorXmlClassGuardName\n :$name:$xmlClassGuardName")
 
                     project.tasks.create(xmlClassGuardName, XmlClassGuardTask::class.java, guardExtension)
                     project.tasks.create(packageChangeName, PackageChangeTask::class.java, guardExtension)
