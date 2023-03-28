@@ -32,12 +32,13 @@ class XmlClassGuardPlugin : Plugin<Project> {
                 val guardExtension = variantExt.variantConfig.findByName(variantName)
                 if (guardExtension != null) {
 
-                    val xmlClassGuardName = "${variantName}XmlClassGuard"
-                    val packageChangeName = "${variantName}PackageChange"
                     val moveDir = "${variantName}MoveDir"
+                    val packageChangeName = "${variantName}PackageChange"
                     val flavorXmlClassGuardName = "${variantName}FlavorXmlClassGuard"
+                    val xmlClassGuardName = "${variantName}XmlClassGuard"
                     val name = project.name
-                    println("./gradlew \n$name:$xmlClassGuardName\n$name:$packageChangeName\n$name:$moveDir\n$name:$flavorXmlClassGuardName\nend")
+                    println(variantName)
+                    println("./gradlew  $name:$moveDir $name:$packageChangeName $name:$flavorXmlClassGuardName\n $name:$xmlClassGuardName")
 
                     project.tasks.create(xmlClassGuardName, XmlClassGuardTask::class.java, guardExtension)
                     project.tasks.create(packageChangeName, PackageChangeTask::class.java, guardExtension)
