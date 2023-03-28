@@ -7,7 +7,7 @@ import java.io.File
  * Date: 2022/3/2
  * Time: 12:46
  */
-open class GuardExtension {
+open class GuardExtension(val name: String = "") {
 
     /*
      * 是否查找约束布局的constraint_referenced_ids属性的值，并添加到AndResGuard的白名单中，

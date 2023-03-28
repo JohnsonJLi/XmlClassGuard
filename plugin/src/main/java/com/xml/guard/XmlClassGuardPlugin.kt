@@ -2,6 +2,7 @@ package com.xml.guard
 
 import com.android.build.gradle.AppExtension
 import com.xml.guard.entensions.GuardExtension
+import com.xml.guard.entensions.VariantExt
 import com.xml.guard.model.aabResGuard
 import com.xml.guard.model.andResGuard
 import com.xml.guard.tasks.*
@@ -20,21 +21,36 @@ class XmlClassGuardPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         checkApplicationPlugin(project)
         println("XmlClassGuard version is $version, agpVersion=${AgpVersion.agpVersion}")
-        val guardExtension = project.extensions.create("xmlClassGuard", GuardExtension::class.java)
-        project.tasks.create("xmlClassGuard", XmlClassGuardTask::class.java, guardExtension)
-        project.tasks.create("packageChange", PackageChangeTask::class.java, guardExtension)
-        project.tasks.create("moveDir", MoveDirTask::class.java, guardExtension)
-        project.tasks.create("flavorXmlClassGuard", FlavorXmlClassGuardTask::class.java, guardExtension)
-
         val android = project.extensions.getByName("android") as AppExtension
-        project.afterEvaluate {
+//        if (!android.hasProperty("applicationVariants")) {
+//            throw IllegalArgumentException("must apply this plugin after 'com.android.application'")
+//        }
+        val variantExt = project.extensions.create("xmlClassGuard", VariantExt::class.java, project.container(GuardExtension::class.java))
+        project.afterEvaluate { project ->
             android.applicationVariants.all { variant ->
-                val variantName = variant.name.capitalize()
-                if (guardExtension.findAndConstraintReferencedIds) {
-                    createAndFindConstraintReferencedIds(project, variantName)
-                }
-                if (guardExtension.findAabConstraintReferencedIds) {
-                    createAabFindConstraintReferencedIds(project, variantName)
+                val variantName = variant.name
+                val guardExtension = variantExt.variantConfig.findByName(variantName)
+                if (guardExtension != null) {
+
+                    val xmlClassGuardName = "${variantName}XmlClassGuard"
+                    val packageChangeName = "${variantName}PackageChange"
+                    val moveDir = "${variantName}MoveDir"
+                    val flavorXmlClassGuardName = "${variantName}FlavorXmlClassGuard"
+                    val name = project.name
+                    println("./gradlew \n$name:$xmlClassGuardName\n$name:$packageChangeName\n$name:$moveDir\n$name:$flavorXmlClassGuardName\nend")
+
+                    project.tasks.create(xmlClassGuardName, XmlClassGuardTask::class.java, guardExtension)
+                    project.tasks.create(packageChangeName, PackageChangeTask::class.java, guardExtension)
+                    project.tasks.create(moveDir, MoveDirTask::class.java, guardExtension)
+                    project.tasks.create(flavorXmlClassGuardName, FlavorXmlClassGuardTask::class.java, guardExtension)
+
+                    val variantNameCapitalize = variant.name.capitalize()
+                    if (guardExtension.findAndConstraintReferencedIds) {
+                        createAndFindConstraintReferencedIds(project, variantNameCapitalize)
+                    }
+                    if (guardExtension.findAabConstraintReferencedIds) {
+                        createAabFindConstraintReferencedIds(project, variantNameCapitalize)
+                    }
                 }
             }
         }

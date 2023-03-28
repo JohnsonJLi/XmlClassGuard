@@ -124,6 +124,10 @@ fun findClassByLayoutXml(text: String, classPaths: MutableList<String>) {
             if (layoutManager != null && !layoutManager.startsWith("androidx.recyclerview.widget.")) {
                 classPaths.add(layoutManager)
             }
+            val layoutBehavior = childNode.attribute("app:layout_behavior")?.toString()
+            if (layoutBehavior != null && !layoutBehavior.startsWith("com.google.android.")) {
+                classPaths.add(layoutBehavior)
+            }
         }
     }
 }

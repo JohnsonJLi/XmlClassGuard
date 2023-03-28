@@ -6,7 +6,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 //apply from: 'aabresguard.gradle'
 
-//apply from: 'xmlclassguard.gradle'
+apply from: 'xmlclassguard.gradle'
 
 android {
     namespace 'com.ljx.example'
@@ -39,6 +39,17 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+
+    flavorDimensions "package"
+    productFlavors{
+        xcg{
+            dimension "package"
+        }
+        xcg22222{
+            dimension "package"
+        }
+    }
+
 }
 
 dependencies {
