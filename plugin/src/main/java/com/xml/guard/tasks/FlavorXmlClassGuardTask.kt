@@ -87,8 +87,15 @@ open class FlavorXmlClassGuardTask @Inject constructor(
             }
         }
         for (classPath in classPaths) {
+            var ignore = false
+            guardExtension.ignoreRenameList?.forEach {
+                if (classPath.contains(it)) {
+                    ignore = true
+                    return@forEach
+                }
+            }
+            if (ignore || classPath.contains(".wxapi.")) continue
             println("classPath : $classPath")
-            if (classPath.contains(".wxapi.") || classPath.contains(".push.")) continue
 
             val dirPath = classPath.getDirPath()
             var exist = false

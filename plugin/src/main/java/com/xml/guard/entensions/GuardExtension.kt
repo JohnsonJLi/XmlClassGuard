@@ -30,4 +30,6 @@ open class GuardExtension(val name: String = "") {
     var flavor: String? = null
 
     var assetsConfigPath: String? = null
+
+    var ignoreRenameList: List<String>? = null
 }

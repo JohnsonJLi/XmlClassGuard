@@ -25,6 +25,7 @@ xmlClassGuard {
         moveDir = ["com.ljx.example": "ef.gh",
                    "com.ljx.base"   : "zzzz.hhhh"]
         flavor = "coudui"
+
     }
 
     def config2 = {
@@ -49,6 +50,7 @@ xmlClassGuard {
         moveDir = ["com.ljx.example": "test.cd",
                    "com.ljx.base"   : "zzzz.hhhh"]
         flavor = "huayuan"
+        ignoreRenameList = [".test.", ".MainActivity"]
     }
     variantConfig {
         xcgDebug config
