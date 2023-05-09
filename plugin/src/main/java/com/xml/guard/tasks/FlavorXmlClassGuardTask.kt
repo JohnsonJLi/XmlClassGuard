@@ -88,7 +88,7 @@ open class FlavorXmlClassGuardTask @Inject constructor(
         }
         for (classPath in classPaths) {
             println("classPath : $classPath")
-            if (classPath.contains(".wxapi.") || classPath.contains("huayuan.love.push.")) continue
+            if (classPath.contains(".wxapi.") || classPath.contains(".push.")) continue
 
             val dirPath = classPath.getDirPath()
             var exist = false

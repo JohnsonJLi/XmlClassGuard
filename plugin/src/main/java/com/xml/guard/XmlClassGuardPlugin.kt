@@ -26,9 +26,10 @@ class XmlClassGuardPlugin : Plugin<Project> {
 //            throw IllegalArgumentException("must apply this plugin after 'com.android.application'")
 //        }
         val variantExt = project.extensions.create("xmlClassGuard", VariantExt::class.java, project.container(GuardExtension::class.java))
-        project.afterEvaluate { project ->
+        project.afterEvaluate {
             android.applicationVariants.all { variant ->
                 val variantName = variant.name
+
                 val guardExtension = variantExt.variantConfig.findByName(variantName)
                 if (guardExtension != null) {
 
