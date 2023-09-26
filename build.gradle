@@ -2,7 +2,7 @@
 buildscript {
     ext {
         kotlin_version = '1.5.30'
-        booster_version = '4.10.0'
+        booster_version = '4.15.0'
         debug = gradle.startParameter.taskNames.any { it.contains('debug') || it.contains('Debug') }
 
     }
@@ -58,6 +58,7 @@ buildscript {
         // in the individual module build.gradle files
 
         classpath "com.bytedance.android:aabresguard-plugin:0.1.0"
+        classpath "com.didiglobal.booster:booster-gradle-plugin:$booster_version"
     }
 }
 
