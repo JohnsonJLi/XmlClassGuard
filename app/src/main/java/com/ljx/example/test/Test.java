@@ -20,45 +20,30 @@ public class Test {
 //        return true;
 //    }
 
-//    public String uanyuu5(String str, String str2) {
-//        long currentTimeMillis = System.currentTimeMillis();
-//        Log.i("FULL_STACK", "uanyuu5( arg1 : " + str + " , arg2 : " + str2 + " )");
-//        if (str == null || str.length() == 0 || str2 == null || str2.length() == 0) {
-//            return null;
-//        }
-//        String str3 = str + str2;
-//        Log.i("FULL_STACK", "uanyuu5 executionTime : [" + (System.currentTimeMillis() - currentTimeMillis));
-//        return str3;
-//    }
+    private String mJuCoFrom = "def_from";
 
-    public void ststste7(String str, int i) {
-        long currentTimeMillis = System.currentTimeMillis();
-        Log.i("FULL_STACK", "ststste7( arg1 : " + str + " , arg2 : " + i + " )");
-        if (str == null || str.length() == 0) {
-            throw new NullPointerException("Parameter NullPointerException");
-        }
-        if (i <= 0) {
-            throw new RuntimeException("Parameter Exceptions");
-        }
-        if (str.length() * i == 0) {
-            throw new RuntimeException("Parameter Exceptions");
-        }
-        Log.i("FULL_STACK", "ststste7 executionTime : " + (System.currentTimeMillis() - currentTimeMillis) + " ms");
+    public Test(){
+        mJuCoFrom = getClass().getSimpleName();
     }
 
-    public void ststste(String str, int i) {
+    public double ttttst0(double i) {
+        double y = Math.sqrt(i);
+        System.out.println("Square root of PI is: " + y);
+        ttttst2( mJuCoFrom,123);
+        return y;
+    }
+
+    public boolean ttttst2(String str, int i) {
         long currentTimeMillis = System.currentTimeMillis();
-        Log.i("FULL_STACK", "ststste7( arg1 : " + str + " , arg2 : " + i + " )");
-        if (str == null || str.length() == 0) {
-            throw new NullPointerException("Parameter NullPointerException");
+        Log.i("FULL_STACK", "ttttst0( arg1 : " + str + " , arg2 : " + i + " )");
+        if (str == null || str.length() == 0 || i <= 0 || str.length() < i) {
+            return false;
         }
-        if (i <= 0) {
-            throw new RuntimeException("Parameter Exceptions");
-        }
-        if (str.length() < i) {
-            throw new RuntimeException("Parameter Exceptions");
-        }
-        Log.i("FULL_STACK", "ststste7 executionTime : " + (System.currentTimeMillis() - currentTimeMillis) + " ms");
+        int i2 = 202;
+        ttttst0(i2);
+        Log.i("FULL_STACK", "ttttst0 executionTime : [" + (System.currentTimeMillis() - currentTimeMillis) + " ] ms");
+
+        return true;
     }
 
 
@@ -67,13 +52,14 @@ public class Test {
     }
 
     public boolean nuzzzzzz(boolean i, boolean i2) {
-        return  i && i2;
+        return i && i2;
     }
 
 
     public boolean nuzzz() {
-        return  false;
+        return false;
     }
+
     public void vvvv() {
     }
 

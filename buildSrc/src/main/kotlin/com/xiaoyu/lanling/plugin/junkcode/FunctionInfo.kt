@@ -1,6 +1,12 @@
 package com.xiaoyu.lanling.plugin.junkcode
 
-import jdk.internal.org.objectweb.asm.MethodVisitor
+import com.xiaoyu.lanling.plugin.utils.isBooleanDescriptor
+import com.xiaoyu.lanling.plugin.utils.isDoubleDescriptor
+import com.xiaoyu.lanling.plugin.utils.isIntDescriptor
+import com.xiaoyu.lanling.plugin.utils.isStringDescriptor
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.ClassNode
 
 data class FunctionInfo(val methodName: String, val inParameter: List<String>? = null, val outParameter: String? = null) {
     fun getDescriptorStr(): String {
@@ -37,5 +43,24 @@ data class FunctionInfo(val methodName: String, val inParameter: List<String>? =
 //        }
 //        return true
 //    }
+
+    fun defInParameter(methodVisitor: MethodVisitor, klass: ClassNode) {
+        inParameter?.forEach { lastInParam ->
+            if (lastInParam.isStringDescriptor) {
+                if (JunkCodeTransformer.random.nextBoolean()) {
+                    methodVisitor.visitLdcInsn(JunkCodeTransformer.generateName())
+                } else {
+                    methodVisitor.visitVarInsn(Opcodes.ALOAD, 0);
+                    methodVisitor.visitFieldInsn(Opcodes.GETFIELD, klass.name, JunkCodeTransformer.FIELD_NAME_FROM, "Ljava/lang/String;");
+                }
+            } else if (lastInParam.isBooleanDescriptor) {
+                methodVisitor.visitInsn(if (JunkCodeTransformer.random.nextBoolean()) Opcodes.ICONST_1 else Opcodes.ICONST_0)
+            } else if (lastInParam.isIntDescriptor) {
+                methodVisitor.visitIntInsn(Opcodes.SIPUSH, JunkCodeTransformer.random.nextInt())
+            } else if (lastInParam.isDoubleDescriptor) {
+                methodVisitor.visitLdcInsn(JunkCodeTransformer.random.nextDouble())
+            }
+        }
+    }
 
 }

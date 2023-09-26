@@ -8,6 +8,7 @@ import org.objectweb.asm.tree.MethodNode
 const val DESC_STRING = "Ljava/lang/String;"
 const val DESC_BOOLEAN = "Z"
 const val DESC_INT = "I"
+const val DESC_DOUBLE = "D"
 
 val MethodNode.nameWithDesc: String
     get() = name + desc
@@ -48,3 +49,6 @@ val String.isBooleanDescriptor: Boolean
 
 val String.isIntDescriptor: Boolean
     get() = this == DESC_INT
+
+val String.isDoubleDescriptor: Boolean
+    get() = this == DESC_DOUBLE
