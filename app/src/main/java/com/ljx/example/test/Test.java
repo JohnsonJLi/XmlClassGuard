@@ -7,7 +7,7 @@ import android.util.Log;
  * Date: 2022/3/22
  * Time: 17:15
  */
-public class Test {
+public class Test extends Test2 {
 
 //    public boolean nuyahnu13(String str, int i) {
 //        long currentTimeMillis = System.currentTimeMillis();
@@ -22,11 +22,23 @@ public class Test {
 
     private String mJuCoFrom = "def_from";
 
-    public Test() {
-        this.mJuCoFrom = "def_from";
-        this.mJuCoFrom = getClass().getSimpleName();
+    public Test(String from,boolean bf,int i) {
+        this.mJuCoFrom = from;
+        if (bf) this.mJuCoFrom = getClass().getSimpleName();
         try {
             ttttst0(609);
+            ttttst2(mJuCoFrom, 123);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Test(String from,boolean bf) {
+        this.mJuCoFrom = from;
+        if (bf) this.mJuCoFrom = getClass().getSimpleName();
+        try {
+            ttttst0(609);
+            ttttst2(mJuCoFrom, 123);
         } catch (Exception e) {
             e.printStackTrace();
         }

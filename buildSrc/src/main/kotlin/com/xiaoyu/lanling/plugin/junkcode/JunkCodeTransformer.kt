@@ -207,8 +207,9 @@ class JunkCodeTransformer : ClassTransformer {
 
                             instructions.insertBefore(it, JumpInsnNode(GOTO, label3))
                             instructions.insertBefore(it, startCatch)
-                            instructions.insertBefore(it, VarInsnNode(ASTORE, 1))
-                            instructions.insertBefore(it, VarInsnNode(ALOAD, 1))
+                            val ivar = (method.parameters?.size ?: 0) + 1
+                            instructions.insertBefore(it, VarInsnNode(ASTORE, ivar))
+                            instructions.insertBefore(it, VarInsnNode(ALOAD, ivar))
                             instructions.insertBefore(it, MethodInsnNode(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V", false))
                             instructions.insertBefore(it, label3)
                         }
