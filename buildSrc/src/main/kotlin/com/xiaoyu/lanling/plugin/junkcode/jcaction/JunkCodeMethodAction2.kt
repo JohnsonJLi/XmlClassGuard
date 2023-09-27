@@ -1,20 +1,16 @@
 package com.xiaoyu.lanling.plugin.junkcode.jcaction
 
 import com.xiaoyu.lanling.plugin.junkcode.FunctionInfo
-import com.xiaoyu.lanling.plugin.junkcode.JunkCodeTransformer.Companion.generateName
-import com.xiaoyu.lanling.plugin.junkcode.JunkCodeTransformer.Companion.random
-import com.xiaoyu.lanling.plugin.utils.isBooleanDescriptor
-import com.xiaoyu.lanling.plugin.utils.isIntDescriptor
-import com.xiaoyu.lanling.plugin.utils.isStringDescriptor
+import com.xiaoyu.lanling.plugin.junkcode.JunkCodeTransformer
 import org.objectweb.asm.Label
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 
 class JunkCodeMethodAction2 : JunkCodeMethod {
 
-    override fun insertJunkCode(methodName: String, klass: ClassNode, notExecutedMethods: MutableList<FunctionInfo>) {
+    override fun insertJunkCode(methodName: String, klass: ClassNode, notExecutedMethods: MutableMap<FunctionInfo, Int>) {
         val thisFun = FunctionInfo(methodName, mutableListOf("Ljava/lang/String;", "I"), "Z")
-        notExecutedMethods.add(thisFun)
+        notExecutedMethods[thisFun] = 0
         val methodVisitor = klass.visitMethod(Opcodes.ACC_PUBLIC, thisFun.methodName, thisFun.getDescriptorStr(), null, null)
 //        val annotationVisitor = methodVisitor.visitAnnotation("Landroidx/annotation/Keep;", false)
 //        annotationVisitor.visitEnd()
@@ -26,15 +22,39 @@ class JunkCodeMethodAction2 : JunkCodeMethod {
         methodVisitor.visitInsn(Opcodes.DUP)
         methodVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false)
         methodVisitor.visitLdcInsn("$methodName( arg1 : ")
-        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+        methodVisitor.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "java/lang/StringBuilder",
+            "append",
+            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            false
+        )
         methodVisitor.visitVarInsn(Opcodes.ALOAD, 1)
-        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+        methodVisitor.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "java/lang/StringBuilder",
+            "append",
+            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            false
+        )
         methodVisitor.visitLdcInsn(" , arg2 : ")
-        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+        methodVisitor.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "java/lang/StringBuilder",
+            "append",
+            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            false
+        )
         methodVisitor.visitVarInsn(Opcodes.ILOAD, 2)
         methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;", false)
         methodVisitor.visitLdcInsn(" )")
-        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+        methodVisitor.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "java/lang/StringBuilder",
+            "append",
+            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            false
+        )
         methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false)
         methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, "android/util/Log", "i", "(Ljava/lang/String;Ljava/lang/String;)I", false)
         methodVisitor.visitInsn(Opcodes.POP)
@@ -83,20 +103,8 @@ class JunkCodeMethodAction2 : JunkCodeMethod {
         methodVisitor.visitLabel(label4)
 
 
-        // TODO: 执行调用逻辑
-        if (notExecutedMethods.isNotEmpty()) {
-            val lastFun = notExecutedMethods[0]
-            if (lastFun != thisFun) {
-                println("JunkCode notExecutedMethods ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
-                methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
-                lastFun.defInParameter(methodVisitor, klass)
-
-                println("JunkCode ${klass.name}  ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
-                methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
-//                methodVisitor.visitInsn(POP)
-                notExecutedMethods.remove(lastFun)
-            }
-        }
+        // 执行调用逻辑
+        JunkCodeTransformer.callMethod(notExecutedMethods, thisFun, methodVisitor, klass)
 
 
         methodVisitor.visitLdcInsn("FULL_STACK")
@@ -104,13 +112,25 @@ class JunkCodeMethodAction2 : JunkCodeMethod {
         methodVisitor.visitInsn(Opcodes.DUP)
         methodVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false)
         methodVisitor.visitLdcInsn("$methodName executionTime : [")
-        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+        methodVisitor.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "java/lang/StringBuilder",
+            "append",
+            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            false
+        )
         methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "currentTimeMillis", "()J", false)
         methodVisitor.visitVarInsn(Opcodes.LLOAD, 3)
         methodVisitor.visitInsn(Opcodes.LSUB)
         methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(J)Ljava/lang/StringBuilder;", false)
         methodVisitor.visitLdcInsn(" ] ms")
-        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+        methodVisitor.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "java/lang/StringBuilder",
+            "append",
+            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            false
+        )
         methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false)
         methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, "android/util/Log", "i", "(Ljava/lang/String;Ljava/lang/String;)I", false)
         methodVisitor.visitInsn(Opcodes.POP)

@@ -7,10 +7,12 @@ import com.google.auto.service.AutoService
 import com.xiaoyu.lanling.plugin.junkcode.jcaction.*
 import com.xiaoyu.lanling.plugin.utils.*
 import org.objectweb.asm.Label
+import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 @AutoService(ClassTransformer::class)
@@ -51,6 +53,30 @@ class JunkCodeTransformer : ClassTransformer {
             return sb.toString()
         }
 
+        fun callMethod(
+            notExecutedMethods: MutableMap<FunctionInfo, Int>,
+            thisFun: FunctionInfo,
+            methodVisitor: MethodVisitor,
+            klass: ClassNode
+        ) {
+            if (notExecutedMethods.isNotEmpty()) {
+                val iterator: Iterator<Map.Entry<FunctionInfo, Int>> = notExecutedMethods.iterator()
+                while (iterator.hasNext()) {
+                    val next = iterator.next()
+                    val lastFun = next.key
+                    if (lastFun != thisFun) {
+                        methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
+                        lastFun.defInParameter(methodVisitor, klass)
+
+                        println("JunkCode ${klass.name}  ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
+                        if (next.value + 1 >= 2) notExecutedMethods.remove(lastFun)
+                        else notExecutedMethods[lastFun] = next.value + 1
+                    }
+                }
+            }
+        }
+
     }
 
 
@@ -70,7 +96,7 @@ class JunkCodeTransformer : ClassTransformer {
 //            || klass.isFinal
             || klass.isAbstract
         ) return klass
-        val notExecutedMethods = mutableListOf<FunctionInfo>()
+        val notExecutedMethods = ConcurrentHashMap<FunctionInfo, Int>()
         println("JunkCode Transforming ${klass.name}")
 
         val mJuCoFromFieldNode = FieldNode(ACC_PRIVATE, FIELD_NAME_FROM, "Ljava/lang/String;", null, null)
@@ -101,13 +127,22 @@ class JunkCodeTransformer : ClassTransformer {
             generateMethods(methodNames, generateName(i), klass, notExecutedMethods)
         }
 
+        insertInit(notExecutedMethods, klass)
+
+        return klass
+    }
+
+    private fun insertInit(
+        notExecutedMethods: MutableMap<FunctionInfo, Int>,
+        klass: ClassNode
+    ) {
         if (notExecutedMethods.isNotEmpty()) {
             var isInit = false
             klass.methods.forEach { method ->
                 if (method.isInitMethod) {
                     val instructions = method.instructions
                     method.instructions?.iterator()?.forEach {
-                        if ((it.opcode >= Opcodes.IRETURN && it.opcode <= Opcodes.RETURN) || it.opcode == Opcodes.ATHROW) {
+                        if ((it.opcode >= IRETURN && it.opcode <= RETURN) || it.opcode == ATHROW) {
 
                             val startTry = LabelNode(Label())
                             val endTry = LabelNode(Label())
@@ -117,46 +152,53 @@ class JunkCodeTransformer : ClassTransformer {
 
                             instructions.insertBefore(it, startTry)
 
-                            while (notExecutedMethods.isNotEmpty()) {
-                                val lastFun = notExecutedMethods[0]
+                            val iterator: Iterator<Map.Entry<FunctionInfo, Int>> = notExecutedMethods.iterator()
+                            while (iterator.hasNext()) {
+                                val next = iterator.next()
+                                if (next.value == 0) {
+                                    val lastFun = next.key
 
-                                instructions.insertBefore(it, VarInsnNode(ALOAD, 0))
-                                lastFun.inParameter?.forEach { lastInParam ->
-                                    if (lastInParam.isStringDescriptor) {
-                                        if (random.nextBoolean()) {
-                                            instructions.insertBefore(it, LdcInsnNode(generateName()))
-                                        } else {
-                                            instructions.insertBefore(it, VarInsnNode(ALOAD, 0))
-                                            instructions.insertBefore(it, FieldInsnNode(GETFIELD, klass.name, FIELD_NAME_FROM, "Ljava/lang/String;"))
+                                    instructions.insertBefore(it, VarInsnNode(ALOAD, 0))
+                                    lastFun.inParameter?.forEach { lastInParam ->
+                                        if (lastInParam.isStringDescriptor) {
+                                            if (random.nextBoolean()) {
+                                                instructions.insertBefore(it, LdcInsnNode(generateName()))
+                                            } else {
+                                                instructions.insertBefore(it, VarInsnNode(ALOAD, 0))
+                                                instructions.insertBefore(
+                                                    it,
+                                                    FieldInsnNode(GETFIELD, klass.name, FIELD_NAME_FROM, "Ljava/lang/String;")
+                                                )
+                                            }
+                                        } else if (lastInParam.isBooleanDescriptor) {
+                                            instructions.insertBefore(it, InsnNode(if (random.nextBoolean()) ICONST_1 else ICONST_0))
+                                        } else if (lastInParam.isIntDescriptor) {
+                                            instructions.insertBefore(it, IntInsnNode(SIPUSH, random.nextInt(1000)))
+                                        } else if (lastInParam.isDoubleDescriptor) {
+                                            instructions.insertBefore(it, LdcInsnNode(random.nextDouble()))
                                         }
-                                    } else if (lastInParam.isBooleanDescriptor) {
-                                        instructions.insertBefore(it, InsnNode(if (random.nextBoolean()) ICONST_1 else ICONST_0))
-                                    } else if (lastInParam.isIntDescriptor) {
-                                        instructions.insertBefore(it, IntInsnNode(SIPUSH, random.nextInt(1000)))
-                                    } else if (lastInParam.isDoubleDescriptor) {
-                                        instructions.insertBefore(it, LdcInsnNode(random.nextDouble()))
                                     }
-                                }
 
-                                println("JunkCode <init> ${klass.name}  ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
+                                    println("JunkCode <init> ${klass.name}  ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
 
-                                instructions.insertBefore(
-                                    it,
-                                    MethodInsnNode(INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
-                                )
+                                    instructions.insertBefore(
+                                        it,
+                                        MethodInsnNode(INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
+                                    )
 
-                                lastFun.outParameter?.let { op ->
-                                    if (op.isStringDescriptor
-                                        || op.isIntDescriptor
-                                        || op.isBooleanDescriptor
-                                    ) {
-                                        instructions.insertBefore(it, InsnNode(POP));
-                                    } else if (op.isDoubleDescriptor) {
-                                        instructions.insertBefore(it, InsnNode(POP2));
+                                    lastFun.outParameter?.let { op ->
+                                        if (op.isStringDescriptor
+                                            || op.isIntDescriptor
+                                            || op.isBooleanDescriptor
+                                        ) {
+                                            instructions.insertBefore(it, InsnNode(POP));
+                                        } else if (op.isDoubleDescriptor) {
+                                            instructions.insertBefore(it, InsnNode(POP2));
+                                        }
                                     }
-                                }
 
-                                notExecutedMethods.remove(lastFun)
+                                    notExecutedMethods.remove(lastFun)
+                                }
                             }
 
                             instructions.insertBefore(it, endTry)
@@ -175,12 +217,10 @@ class JunkCodeTransformer : ClassTransformer {
                 }
             }
             if (!isInit) {
-//                createInitFunction(classNode, this)
+                //                createInitFunction(classNode, this)
                 println("JunkCode <init> does Not Exist")
             }
         }
-
-        return klass
     }
 
     private fun initClassField(klass: ClassNode) {
@@ -215,7 +255,7 @@ class JunkCodeTransformer : ClassTransformer {
         }
     }
 
-    fun generateMethods(methodNames: ArrayList<String>, methodName: String, klass: ClassNode, notExecutedMethods: MutableList<FunctionInfo>) {
+    fun generateMethods(methodNames: ArrayList<String>, methodName: String, klass: ClassNode, notExecutedMethods: MutableMap<FunctionInfo, Int>) {
         if (!methodNames.contains(methodName)) {
             methodNames.add(methodName)
             val nextInt = random.nextInt(10000) % junkCodeMethods.size

@@ -1,15 +1,16 @@
 package com.xiaoyu.lanling.plugin.junkcode.jcaction
 
 import com.xiaoyu.lanling.plugin.junkcode.FunctionInfo
+import com.xiaoyu.lanling.plugin.junkcode.JunkCodeTransformer
 import jdk.internal.org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 
 class JunkCodeMethodAction5 : JunkCodeMethod {
 
-    override fun insertJunkCode(methodName: String, klass: ClassNode, notExecutedMethods: MutableList<FunctionInfo>) {
+    override fun insertJunkCode(methodName: String, klass: ClassNode, notExecutedMethods: MutableMap<FunctionInfo, Int>) {
         val thisFun = FunctionInfo(methodName, mutableListOf("D"), "D")
-        notExecutedMethods.add(thisFun)
+        notExecutedMethods[thisFun] = 0
         val methodVisitor = klass.visitMethod(Opcodes.ACC_PUBLIC, thisFun.methodName, thisFun.getDescriptorStr(), null, null);
 
         methodVisitor.visitParameter("i", 0);
@@ -29,18 +30,7 @@ class JunkCodeMethodAction5 : JunkCodeMethod {
         methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 
         // 执行调用逻辑
-        if (notExecutedMethods.isNotEmpty()) {
-            val lastFun = notExecutedMethods[0]
-            if (lastFun != thisFun) {
-                println("JunkCode notExecutedMethods ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
-                methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
-                lastFun.defInParameter(methodVisitor, klass)
-
-                println("JunkCode ${klass.name}  ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
-                methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
-                notExecutedMethods.remove(lastFun)
-            }
-        }
+        JunkCodeTransformer.callMethod(notExecutedMethods, thisFun, methodVisitor, klass)
 
         methodVisitor.visitVarInsn(DLOAD, 3);
         methodVisitor.visitInsn(DRETURN);

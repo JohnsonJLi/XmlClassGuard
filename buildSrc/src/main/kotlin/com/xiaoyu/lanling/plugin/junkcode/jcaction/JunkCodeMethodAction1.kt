@@ -1,15 +1,17 @@
 package com.xiaoyu.lanling.plugin.junkcode.jcaction
 
 import com.xiaoyu.lanling.plugin.junkcode.FunctionInfo
+import com.xiaoyu.lanling.plugin.junkcode.JunkCodeTransformer
 import org.objectweb.asm.Label
+import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 
 class JunkCodeMethodAction1 : JunkCodeMethod {
 
-    override fun insertJunkCode(methodName: String, klass: ClassNode, notExecutedMethods: MutableList<FunctionInfo>) {
+    override fun insertJunkCode(methodName: String, klass: ClassNode, notExecutedMethods: MutableMap<FunctionInfo, Int>) {
         val thisFun = FunctionInfo(methodName, mutableListOf("Ljava/lang/String;", "I"), "V")
-        notExecutedMethods.add(thisFun)
+        notExecutedMethods[thisFun] = 0
         val methodVisitor = klass.visitMethod(Opcodes.ACC_PUBLIC, thisFun.methodName, thisFun.getDescriptorStr(), null, null)
 //        val annotationVisitor = methodVisitor.visitAnnotation("Landroidx/annotation/Keep;", false)
 //        annotationVisitor.visitEnd()
@@ -93,20 +95,8 @@ class JunkCodeMethodAction1 : JunkCodeMethod {
         methodVisitor.visitInsn(Opcodes.ATHROW)
         methodVisitor.visitLabel(label3)
 
-        // TODO: 执行调用逻辑
-        if (notExecutedMethods.isNotEmpty()) {
-            val lastFun = notExecutedMethods[0]
-            if (lastFun != thisFun) {
-                methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
-                lastFun.defInParameter(methodVisitor, klass)
-
-                println("JunkCode ${klass.name}  ${lastFun.methodName}  ${lastFun.getDescriptorStr()}")
-                methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
-//                methodVisitor.visitInsn(POP)
-                notExecutedMethods.remove(lastFun)
-            }
-        }
-
+        // 执行调用逻辑
+        JunkCodeTransformer.callMethod(notExecutedMethods, thisFun, methodVisitor, klass)
 
         methodVisitor.visitLdcInsn("FULL_STACK")
         methodVisitor.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder")

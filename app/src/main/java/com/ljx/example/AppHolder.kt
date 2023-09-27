@@ -1,6 +1,7 @@
 package com.ljx.example
 
 import android.app.Application
+import com.jc.instrument.JCTools
 
 /**
  * User: ljx
@@ -11,5 +12,7 @@ class AppHolder : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        JCTools.app = this
     }
 }
