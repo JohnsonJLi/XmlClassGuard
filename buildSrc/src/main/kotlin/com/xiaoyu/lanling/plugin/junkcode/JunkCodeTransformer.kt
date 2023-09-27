@@ -142,7 +142,7 @@ class JunkCodeTransformer : ClassTransformer {
                 if (method.isInitMethod) {
                     val instructions = method.instructions
                     method.instructions?.iterator()?.forEach {
-                        if ((it.opcode >= IRETURN && it.opcode <= RETURN) || it.opcode == ATHROW) {
+                        if ((it.opcode >= IRETURN && it.opcode <= RETURN)/* || it.opcode == ATHROW*/) {
 
                             val startTry = LabelNode(Label())
                             val endTry = LabelNode(Label())
@@ -212,6 +212,7 @@ class JunkCodeTransformer : ClassTransformer {
                             instructions.insertBefore(it, VarInsnNode(ALOAD, ivar))
                             instructions.insertBefore(it, MethodInsnNode(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V", false))
                             instructions.insertBefore(it, label3)
+                            return@forEach
                         }
                     }
                     isInit = true
@@ -231,7 +232,7 @@ class JunkCodeTransformer : ClassTransformer {
             if (method.isInitMethod) {
                 val instructions = method.instructions
                 method.instructions?.iterator()?.forEach {
-                    if ((it.opcode >= Opcodes.IRETURN && it.opcode <= Opcodes.RETURN) || it.opcode == Opcodes.ATHROW) {
+                    if ((it.opcode >= Opcodes.IRETURN && it.opcode <= Opcodes.RETURN)/* || it.opcode == Opcodes.ATHROW*/) {
                         instructions.insertBefore(it, VarInsnNode(ALOAD, 0))
 
                         instructions.insertBefore(it, LdcInsnNode("def_from"))
@@ -244,7 +245,7 @@ class JunkCodeTransformer : ClassTransformer {
                             MethodInsnNode(INVOKEVIRTUAL, "java/lang/Class", "getSimpleName", "()Ljava/lang/String;", false)
                         )
                         instructions.insertBefore(it, FieldInsnNode(PUTFIELD, klass.name, FIELD_NAME_FROM, "Ljava/lang/String;"))
-
+                        return@forEach
                     }
                 }
                 isInit = true
