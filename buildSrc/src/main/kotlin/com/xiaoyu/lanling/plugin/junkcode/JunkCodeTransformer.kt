@@ -6,6 +6,7 @@ import com.didiglobal.booster.transform.asm.isAbstract
 import com.google.auto.service.AutoService
 import com.xiaoyu.lanling.plugin.junkcode.jcaction.*
 import com.xiaoyu.lanling.plugin.utils.*
+import org.objectweb.asm.Label
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
@@ -18,7 +19,7 @@ class JunkCodeTransformer : ClassTransformer {
     companion object {
         var abc: CharArray? = null
         private const val GENERATE_MAIN_PACKAGE = "GENERATE_MAIN_PACKAGE"
-         const val FIELD_NAME_FROM = "mCpJuCoFrom"
+        const val FIELD_NAME_FROM = "mCpJuCoFrom"
         private const val GENERATE_MAIN_PACKAGE_METHOD_MULTIPLE = "GENERATE_MAIN_PACKAGE_METHOD_MULTIPLE"
         private const val GENERATE_MAIN_PACKAGE_DICTIONARY = "GENERATE_MAIN_PACKAGE_DICTIONARY"
         private const val DEFAULT_VALUE_DICTIONARY = "abcdefghijklmnopqrstuvwxyz"
@@ -107,6 +108,15 @@ class JunkCodeTransformer : ClassTransformer {
                     val instructions = method.instructions
                     method.instructions?.iterator()?.forEach {
                         if ((it.opcode >= Opcodes.IRETURN && it.opcode <= Opcodes.RETURN) || it.opcode == Opcodes.ATHROW) {
+
+                            val startTry = LabelNode(Label())
+                            val endTry = LabelNode(Label())
+                            val startCatch = LabelNode(Label())
+
+                            method.tryCatchBlocks.add(TryCatchBlockNode(startTry, endTry, startCatch, "java/lang/Exception"))
+
+                            instructions.insertBefore(it, startTry)
+
                             while (notExecutedMethods.isNotEmpty()) {
                                 val lastFun = notExecutedMethods[0]
 
@@ -134,8 +144,31 @@ class JunkCodeTransformer : ClassTransformer {
                                     it,
                                     MethodInsnNode(INVOKEVIRTUAL, klass.name, lastFun.methodName, lastFun.getDescriptorStr(), false)
                                 )
+
+                                lastFun.outParameter?.let { op ->
+                                    if (op.isStringDescriptor
+                                        || op.isIntDescriptor
+                                        || op.isBooleanDescriptor
+                                    ) {
+                                        instructions.insertBefore(it, InsnNode(POP));
+                                    } else if (op.isDoubleDescriptor) {
+                                        instructions.insertBefore(it, InsnNode(POP2));
+                                    }
+                                }
+
                                 notExecutedMethods.remove(lastFun)
                             }
+
+                            instructions.insertBefore(it, endTry)
+
+                            val label3 = LabelNode(Label())
+
+                            instructions.insertBefore(it, JumpInsnNode(GOTO, label3))
+                            instructions.insertBefore(it, startCatch)
+                            instructions.insertBefore(it, VarInsnNode(ASTORE, 1))
+                            instructions.insertBefore(it, VarInsnNode(ALOAD, 1))
+                            instructions.insertBefore(it, MethodInsnNode(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V", false))
+                            instructions.insertBefore(it, label3)
                         }
                     }
                     isInit = true

@@ -22,15 +22,21 @@ public class Test {
 
     private String mJuCoFrom = "def_from";
 
-    public Test(){
-        mJuCoFrom = getClass().getSimpleName();
+    public Test() {
+        this.mJuCoFrom = "def_from";
+        this.mJuCoFrom = getClass().getSimpleName();
+        try {
+            ttttst0(609);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public double ttttst0(double i) {
+    public boolean ttttst0(double i) {
         double y = Math.sqrt(i);
         System.out.println("Square root of PI is: " + y);
-        ttttst2( mJuCoFrom,123);
-        return y;
+        ttttst2(mJuCoFrom, 123);
+        return true;
     }
 
     public boolean ttttst2(String str, int i) {
