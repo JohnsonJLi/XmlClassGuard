@@ -37,16 +37,14 @@ class XmlClassGuardPlugin : Plugin<Project> {
                     val packageChangeName = "${variantName}PackageChange"
                     val flavorXmlClassGuardName = "${variantName}FlavorXmlClassGuard"
                     val xmlClassGuardName = "${variantName}XmlClassGuard"
-                    val runPythonScriptInsertRES = "${variantName}InsertRES"
                     val name = project.name
                     println(variantName)
-                    println("./gradlew :$name:$moveDir :$name:$packageChangeName :$name:$flavorXmlClassGuardName\n:$name:$xmlClassGuardName\n:$name:$runPythonScriptInsertRES")
+                    println("./gradlew :$name:$moveDir :$name:$packageChangeName :$name:$flavorXmlClassGuardName\n:$name:$xmlClassGuardName")
 
                     project.tasks.create(xmlClassGuardName, XmlClassGuardTask::class.java, guardExtension)
                     project.tasks.create(packageChangeName, PackageChangeTask::class.java, guardExtension)
                     project.tasks.create(moveDir, MoveDirTask::class.java, guardExtension)
                     project.tasks.create(flavorXmlClassGuardName, FlavorXmlClassGuardTask::class.java, guardExtension)
-                    project.tasks.create(runPythonScriptInsertRES, ResInsertTask::class.java)
 
                     val variantNameCapitalize = variant.name.capitalize()
                     if (guardExtension.findAndConstraintReferencedIds) {
