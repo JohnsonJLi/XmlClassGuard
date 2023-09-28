@@ -1,0 +1,6 @@
+
+//./gradlew runPythonScriptInsertRES
+
+task runPythonScriptInsertRES(type: Exec) {
+    commandLine '/usr/local/bin/python', 'res_insert.py'
+}
