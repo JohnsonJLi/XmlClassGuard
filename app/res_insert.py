@@ -33,6 +33,9 @@ def add_element_or_whitespace(file_path):
             root.text = root.text + random.choice([' ', '\n'])
             i = i - 1
 
+    ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+    ET.register_namespace("app", "http://schemas.android.com/apk/res-auto")
+    ET.register_namespace("tools", "http://schemas.android.com/tools")
     # 保存修改后的xml文件
     tree.write(file_path)
 
