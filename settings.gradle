@@ -5,6 +5,9 @@ pluginManagement {
         mavenCentral()
         if ("true" == useMavenLocal) {
             mavenLocal()
+            maven {
+                url uri('./release-local')
+            }
         }
         maven { url 'https://jitpack.io' }
         maven { url 'https://raw.githubusercontent.com/martinloren/AabResGuard/mvn-repo' }

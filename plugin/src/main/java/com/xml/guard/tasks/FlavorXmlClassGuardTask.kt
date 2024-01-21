@@ -5,6 +5,7 @@ import com.xml.guard.model.MappingParser
 import com.xml.guard.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
@@ -15,7 +16,7 @@ import javax.inject.Inject
  * Time: 19:06
  */
 open class FlavorXmlClassGuardTask @Inject constructor(
-    val guardExtension: GuardExtension
+    @Internal val guardExtension: GuardExtension
 ) : DefaultTask() {
 
     init {

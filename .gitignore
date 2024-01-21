@@ -16,3 +16,4 @@ local.properties
 /plugin/.idea/
 /.idea/
 /buildSrc/build
+/release-local

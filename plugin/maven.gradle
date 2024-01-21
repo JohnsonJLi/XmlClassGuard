@@ -16,6 +16,10 @@ publishing {
         }
     }
     repositories {
+
+        // 输出到本地，debug 调试再放开，同时把下面的 Maven 块注释掉
+//        maven { url uri("${rootDir}/release-local") }
+
         maven {
             // change to point to your repo, e.g. http://my.org/repo
             url POM_VERSION_NAME.endsWith('SNAPSHOT') ? POM_MAVEN_URL_SNAPSHOT : POM_MAVEN_URL
