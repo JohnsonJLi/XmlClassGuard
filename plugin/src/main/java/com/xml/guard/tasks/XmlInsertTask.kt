@@ -13,6 +13,7 @@ import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
+import kotlin.io.path.pathString
 import kotlin.random.Random
 
 open class XmlInsertTask @Inject constructor(
@@ -40,7 +41,8 @@ open class XmlInsertTask @Inject constructor(
             try {
                 Files.walk(projectDir)
                     .filter {
-                        Files.isDirectory(it) && it.fileName.toString().startsWith("layout")
+                        val fileName = it.fileName.toString()
+                        Files.isDirectory(it) && (fileName.startsWith("layout") || fileName.startsWith("drawable"))
                     }
                     .forEach { insertDir ->
                         println("XmlInsertTask:> insertDir : ${insertDir} >f  ${insertDir.fileName}")
@@ -48,7 +50,6 @@ open class XmlInsertTask @Inject constructor(
                             val tempFilePath = layoutFile.resolveSibling("${layoutFile.name}.temp").toPath()
                             println("XmlInsertTask:> ${tempFilePath}")
                             modifyXmlFile(layoutFile.toPath(), tempFilePath)
-                            Files.move(tempFilePath, layoutFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
                         }
                     }
             } catch (e: Exception) {
@@ -58,49 +59,85 @@ open class XmlInsertTask @Inject constructor(
     }
 
     private fun modifyXmlFile(input: Path, output: Path) {
+        val isDrawable = input.pathString.contains("drawable")
+        val isLayout = input.pathString.contains("layout")
+        if (!isDrawable && !isLayout) return
         val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
         val document = documentBuilder.parse(input.toFile())
         val root = document.documentElement
 
         val viewType = root.tagName
-        if (viewType == "ViewGroup" || viewType == "androidx.constraintlayout.widget.ConstraintLayout" ||
-            viewType == "LinearLayout" || viewType == "RelativeLayout" || viewType == "FrameLayout"
-        ) {
-            val randomView = views.random()
-            println("XmlInsertTask:> 添加新的元素:$randomView")
-            // 添加新的元素
-            val newElement = document.createElement(randomView)
-            newElement.setAttributeNS(
-                "http://schemas.android.com/apk/res/android",
-                "android:layout_width",
-                "${getRandomWH()}dp"
-            )
-            newElement.setAttributeNS(
-                "http://schemas.android.com/apk/res/android",
-                "android:layout_height",
-                "${getRandomWH()}dp"
-            )
+        if (isDrawable) {
+            if (viewType == "vector") {
+                // 提取并解析原有 viewportWidth 和 viewportHeight 值
+                val viewportWidthOriginal = root.getAttribute("android:viewportWidth").toDoubleOrNull() ?: 1440.0
+//                val viewportHeightOriginal = root.getAttribute("android:viewportHeight").toDoubleOrNull() ?: 24.0
 
-            randomAttributes(newElement)
+                val newX = viewportWidthOriginal + if (guard.resRandomFactor > 0) guard.resRandomFactor else Random.nextInt(10, 24).toInt()
+//                val zoom = newW / viewportHeightOriginal
+//                root.setAttribute("android:viewportWidth", newW.toInt().toString())
+//                root.setAttribute("android:viewportHeight", (viewportHeightOriginal * zoom).toInt().toString())
 
-            newElement.setAttributeNS(
-                "http://schemas.android.com/apk/res/android",
-                "android:visibility",
-                "gone"
-            )
-            root.appendChild(newElement)
-        } else {
+                //    <path
+                //        android:fillColor="#00000000"
+                //        android:pathData="M 1440,0 m -0.1,0 a 0.1,0.1 0 1,0 0.2,0 a 0.1,0.1 0 1,0 -0.2,0" />
+                val newElement = document.createElement("path")
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:fillColor",
+                    "#${generateRandomArgbColor(0)}"
+                )
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:pathData",
+                    "M ${newX},0 m -0.1,0 a 0.1,0.1 0 1,0 0.2,0 a 0.1,0.1 0 1,0 -0.2,0"
+                )
+                root.appendChild(newElement)
+            } else {
+                return
+            }
+        } else if (isLayout) {
+            if (viewType == "ViewGroup" || viewType == "androidx.constraintlayout.widget.ConstraintLayout" ||
+                viewType == "LinearLayout" || viewType == "RelativeLayout" || viewType == "FrameLayout"
+            ) {
+                val randomView = views.random()
+                println("XmlInsertTask:> 添加新的元素:$randomView")
+                // 添加新的元素
+                val newElement = document.createElement(randomView)
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:layout_width",
+                    "${getRandomWH()}dp"
+                )
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:layout_height",
+                    "${getRandomWH()}dp"
+                )
+
+                randomAttributes(newElement)
+
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:visibility",
+                    "gone"
+                )
+                root.appendChild(newElement)
+            } else {
+                return
 //            println("XmlInsertTask:> 在根标签中随机添加空格或回车")
 //            // 在根标签中随机添加空格或回车
 //            repeat(Random.nextInt(1, 50)) {
 //                root.textContent += if (Random.nextBoolean()) " " else "\n"
 //            }
+            }
         }
 
         val transformerFactory = TransformerFactory.newInstance()
         val transformer = transformerFactory.newTransformer()
         transformer.setOutputProperty(OutputKeys.INDENT, "yes")
         transformer.transform(DOMSource(document), StreamResult(output.toFile()))
+        Files.move(output, input, StandardCopyOption.REPLACE_EXISTING)
     }
 
     private fun randomAttributes(newElement: Element) {
@@ -133,4 +170,14 @@ open class XmlInsertTask @Inject constructor(
     }
 
     private fun getRandomWH() = if (guard.resRandomFactor > 0) Random.nextInt(0, 5) * guard.resRandomFactor else Random.nextInt(0, 50)
+
+    fun generateRandomArgbColor(alpha: Int = 256): Int {
+        val alpha = Random.nextInt(alpha)
+        val red = Random.nextInt(256)
+        val green = Random.nextInt(256)
+        val blue = Random.nextInt(256)
+
+        // 合并四个分量为一个32位整数
+        return (alpha shl 24) or (red shl 16) or (green shl 8) or blue
+    }
 }
