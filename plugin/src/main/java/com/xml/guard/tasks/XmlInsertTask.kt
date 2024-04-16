@@ -30,7 +30,7 @@ open class XmlInsertTask @Inject constructor(
         androidProjects.forEach { itP ->
             xmlInsert(itP.resDir().toPath())
             guard.flavor?.let {
-                xmlInsert(itP.resDir(it).toPath())
+                xmlInsert(itP.resDir(flavor = it).toPath())
             }
         }
     }
