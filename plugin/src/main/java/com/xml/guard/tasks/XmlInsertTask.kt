@@ -85,13 +85,14 @@ open class XmlInsertTask @Inject constructor(
                 newElement.setAttributeNS(
                     "http://schemas.android.com/apk/res/android",
                     "android:fillColor",
-                    "#${generateRandomArgbColor(0)}"
+                    "#00${generateRandomArgbColor()}"
                 )
                 newElement.setAttributeNS(
                     "http://schemas.android.com/apk/res/android",
                     "android:pathData",
                     "M ${newX},0 m -0.1,0 a 0.1,0.1 0 1,0 0.2,0 a 0.1,0.1 0 1,0 -0.2,0"
                 )
+
                 root.appendChild(newElement)
             } else {
                 return
@@ -171,13 +172,12 @@ open class XmlInsertTask @Inject constructor(
 
     private fun getRandomWH() = if (guard.resRandomFactor > 0) Random.nextInt(0, 5) * guard.resRandomFactor else Random.nextInt(0, 50)
 
-    fun generateRandomArgbColor(alpha: Int = 256): Int {
-        val alpha = Random.nextInt(alpha)
+    private fun generateRandomArgbColor(): String {
         val red = Random.nextInt(256)
         val green = Random.nextInt(256)
         val blue = Random.nextInt(256)
 
         // 合并四个分量为一个32位整数
-        return (alpha shl 24) or (red shl 16) or (green shl 8) or blue
+        return "${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue.toString(16).padStart(2, '0')}"
     }
 }
