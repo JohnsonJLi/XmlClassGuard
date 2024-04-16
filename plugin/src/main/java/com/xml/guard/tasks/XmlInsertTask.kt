@@ -3,6 +3,7 @@ import com.xml.guard.utils.allDependencyAndroidProjects
 import com.xml.guard.utils.resDir
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
+import org.w3c.dom.Element
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -20,6 +21,7 @@ open class XmlInsertTask @Inject constructor(
     private val guard: GuardExtension = guardExtension
 
     private val views = arrayListOf("View", "TextView", "FrameLayout", "LinearLayout", "RelativeLayout")
+    private val directions = arrayListOf("Start", "Bottom", "Top", "End", "Left", "Right", "")
 
     @TaskAction
     fun execute() {
@@ -64,19 +66,23 @@ open class XmlInsertTask @Inject constructor(
         if (viewType == "ViewGroup" || viewType == "androidx.constraintlayout.widget.ConstraintLayout" ||
             viewType == "LinearLayout" || viewType == "RelativeLayout" || viewType == "FrameLayout"
         ) {
-            println("XmlInsertTask:> 添加新的元素")
+            val randomView = views.random()
+            println("XmlInsertTask:> 添加新的元素:$randomView")
             // 添加新的元素
-            val newElement = document.createElement(views.random())
+            val newElement = document.createElement(randomView)
             newElement.setAttributeNS(
                 "http://schemas.android.com/apk/res/android",
                 "android:layout_width",
-                "${Random.nextInt(0, 50)}dp"
+                "${getRandomWH()}dp"
             )
             newElement.setAttributeNS(
                 "http://schemas.android.com/apk/res/android",
                 "android:layout_height",
-                "${Random.nextInt(0, 50)}dp"
+                "${getRandomWH()}dp"
             )
+
+            randomAttributes(newElement)
+
             newElement.setAttributeNS(
                 "http://schemas.android.com/apk/res/android",
                 "android:visibility",
@@ -96,4 +102,35 @@ open class XmlInsertTask @Inject constructor(
         transformer.setOutputProperty(OutputKeys.INDENT, "yes")
         transformer.transform(DOMSource(document), StreamResult(output.toFile()))
     }
+
+    private fun randomAttributes(newElement: Element) {
+        when (Random.nextInt(0, 6)) {
+            1 -> {
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:padding${directions.random()}",
+                    "${getRandomWH()}dp"
+                )
+            }
+            2 -> {
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:layout_margin",
+                    "${Random.nextInt(0, 50)}dp"
+                )
+            }
+            0 -> {
+                randomAttributes(newElement)
+            }
+            else -> {
+                newElement.setAttributeNS(
+                    "http://schemas.android.com/apk/res/android",
+                    "android:layout_margin${directions.random()}",
+                    "${Random.nextInt(0, 50)}dp"
+                )
+            }
+        }
+    }
+
+    private fun getRandomWH() = if (guard.resRandomFactor > 0) Random.nextInt(0, 5) * guard.resRandomFactor else Random.nextInt(0, 50)
 }
