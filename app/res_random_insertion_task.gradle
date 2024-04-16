@@ -2,5 +2,5 @@
 //./gradlew runPythonScriptInsertRES
 
 task runPythonScriptInsertRES(type: Exec) {
-    commandLine '/usr/local/bin/python', 'res_insert.py'
+    commandLine "${System.getenv('PYTHON_HOME') ?: '/usr/local/bin/python'}", 'res_insert.py'
 }

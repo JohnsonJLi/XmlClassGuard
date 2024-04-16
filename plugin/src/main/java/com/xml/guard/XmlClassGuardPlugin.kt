@@ -1,5 +1,6 @@
 package com.xml.guard
 
+import XmlInsertTask
 import com.android.build.gradle.AppExtension
 import com.xml.guard.entensions.GuardExtension
 import com.xml.guard.entensions.VariantExt
@@ -33,14 +34,16 @@ class XmlClassGuardPlugin : Plugin<Project> {
                 val guardExtension = variantExt.variantConfig.findByName(variantName)
                 if (guardExtension != null) {
 
+                    val xmlInsertName = "${variantName}XmlInsert"
                     val moveDir = "${variantName}MoveDir"
                     val packageChangeName = "${variantName}PackageChange"
                     val flavorXmlClassGuardName = "${variantName}FlavorXmlClassGuard"
                     val xmlClassGuardName = "${variantName}XmlClassGuard"
                     val name = project.name
                     println(variantName)
-                    println("./gradlew :$name:$moveDir :$name:$packageChangeName :$name:$flavorXmlClassGuardName\n:$name:$xmlClassGuardName")
+                    println("./gradlew :$name:$moveDir :$name:$packageChangeName :$name:$flavorXmlClassGuardName\n:$name:$xmlClassGuardName :$name:$xmlInsertName")
 
+                    project.tasks.create(xmlInsertName, XmlInsertTask::class.java)
                     project.tasks.create(xmlClassGuardName, XmlClassGuardTask::class.java, guardExtension)
                     project.tasks.create(packageChangeName, PackageChangeTask::class.java, guardExtension)
                     project.tasks.create(moveDir, MoveDirTask::class.java, guardExtension)
