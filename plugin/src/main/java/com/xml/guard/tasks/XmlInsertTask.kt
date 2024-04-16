@@ -37,7 +37,7 @@ open class XmlInsertTask @Inject constructor(
 
     private fun xmlInsert(projectDir: Path?) {
         if (!Files.notExists(projectDir) && Files.isDirectory(projectDir)) {
-            println("XmlInsertTask:> ${projectDir}")
+            println("XmlInsertTask:> projectDir: ${projectDir}")
             try {
                 Files.walk(projectDir)
                     .filter {
@@ -48,7 +48,6 @@ open class XmlInsertTask @Inject constructor(
                         println("XmlInsertTask:> insertDir : ${insertDir} >f  ${insertDir.fileName}")
                         insertDir.toFile().listFiles { file -> file.isFile && file.extension == "xml" }?.forEach { layoutFile ->
                             val tempFilePath = layoutFile.resolveSibling("${layoutFile.name}.temp").toPath()
-                            println("XmlInsertTask:> ${tempFilePath}")
                             modifyXmlFile(layoutFile.toPath(), tempFilePath)
                         }
                     }
@@ -62,6 +61,7 @@ open class XmlInsertTask @Inject constructor(
         val isDrawable = input.pathString.contains("drawable")
         val isLayout = input.pathString.contains("layout")
         if (!isDrawable && !isLayout) return
+
         val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
         val document = documentBuilder.parse(input.toFile())
         val root = document.documentElement
@@ -92,7 +92,6 @@ open class XmlInsertTask @Inject constructor(
                     "android:pathData",
                     "M ${newX},0 m -0.1,0 a 0.1,0.1 0 1,0 0.2,0 a 0.1,0.1 0 1,0 -0.2,0"
                 )
-
                 root.appendChild(newElement)
             } else {
                 return
@@ -133,7 +132,7 @@ open class XmlInsertTask @Inject constructor(
 //            }
             }
         }
-
+        println("XmlInsertTask:> output: $output")
         val transformerFactory = TransformerFactory.newInstance()
         val transformer = transformerFactory.newTransformer()
         transformer.setOutputProperty(OutputKeys.INDENT, "yes")
