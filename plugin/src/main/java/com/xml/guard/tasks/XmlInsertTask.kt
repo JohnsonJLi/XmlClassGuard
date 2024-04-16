@@ -36,8 +36,8 @@ open class XmlInsertTask @Inject constructor(
             try {
                 Files.walk(projectDir)
                     .filter {
-                        println("XmlInsertTask:> filter : ${it}")
-                        it.toString().endsWith("/layout")
+                        println("XmlInsertTask:> filter : ${it} >f  ${it.fileName}")
+                        Files.isDirectory(it) && it.fileName.toString().startsWith("layout")
                     }
                     .forEach { layoutDir ->
                         println("XmlInsertTask:> ${layoutDir}")
