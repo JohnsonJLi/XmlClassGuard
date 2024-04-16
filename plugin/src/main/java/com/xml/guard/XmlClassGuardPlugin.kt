@@ -43,7 +43,7 @@ class XmlClassGuardPlugin : Plugin<Project> {
                     println(variantName)
                     println("./gradlew :$name:$moveDir :$name:$packageChangeName :$name:$flavorXmlClassGuardName\n:$name:$xmlClassGuardName :$name:$xmlInsertName")
 
-                    project.tasks.create(xmlInsertName, XmlInsertTask::class.java)
+                    project.tasks.create(xmlInsertName, XmlInsertTask::class.java, guardExtension)
                     project.tasks.create(xmlClassGuardName, XmlClassGuardTask::class.java, guardExtension)
                     project.tasks.create(packageChangeName, PackageChangeTask::class.java, guardExtension)
                     project.tasks.create(moveDir, MoveDirTask::class.java, guardExtension)

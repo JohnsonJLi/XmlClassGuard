@@ -1,8 +1,12 @@
+import com.xml.guard.entensions.GuardExtension
+import com.xml.guard.utils.allDependencyAndroidProjects
+import com.xml.guard.utils.resDir
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
@@ -10,20 +14,44 @@ import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 import kotlin.random.Random
 
-open class XmlInsertTask : DefaultTask() {
+open class XmlInsertTask @Inject constructor(
+    guardExtension: GuardExtension
+) : DefaultTask() {
+    private val guard: GuardExtension = guardExtension
 
     @TaskAction
     fun execute() {
-        val projectDir = project.rootDir.toPath()
-        Files.walk(projectDir)
-            .filter { it.toString().endsWith("/layout/") }
-            .forEach { layoutDir ->
-                layoutDir.toFile().listFiles { file -> file.isFile && file.extension == "xml" }?.forEach { layoutFile ->
-                    val tempFilePath = layoutFile.resolveSibling("${layoutFile.name}.temp").toPath()
-                    modifyXmlFile(layoutFile.toPath(), tempFilePath)
-                    Files.move(tempFilePath, layoutFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-                }
+        val androidProjects = allDependencyAndroidProjects()
+        androidProjects.forEach { itP ->
+            xmlInsert(itP.resDir().toPath())
+            guard.flavor?.let {
+                xmlInsert(itP.resDir(it).toPath())
             }
+        }
+    }
+
+    private fun xmlInsert(projectDir: Path?) {
+        if (!Files.notExists(projectDir) && Files.isDirectory(projectDir)) {
+            println("XmlInsertTask:> ${projectDir}")
+            try {
+                Files.walk(projectDir)
+                    .filter {
+                        println("XmlInsertTask:> filter : ${it}")
+                        it.toString().endsWith("/layout")
+                    }
+                    .forEach { layoutDir ->
+                        println("XmlInsertTask:> ${layoutDir}")
+                        layoutDir.toFile().listFiles { file -> file.isFile && file.extension == "xml" }?.forEach { layoutFile ->
+                            val tempFilePath = layoutFile.resolveSibling("${layoutFile.name}.temp").toPath()
+                            println("XmlInsertTask:> ${tempFilePath}")
+                            modifyXmlFile(layoutFile.toPath(), tempFilePath)
+                            Files.move(tempFilePath, layoutFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                        }
+                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun modifyXmlFile(input: Path, output: Path) {
@@ -35,6 +63,7 @@ open class XmlInsertTask : DefaultTask() {
         if (viewType == "ViewGroup" || viewType == "androidx.constraintlayout.widget.ConstraintLayout" ||
             viewType == "LinearLayout" || viewType == "RelativeLayout" || viewType == "LinearLayout"
         ) {
+            println("XmlInsertTask:> 添加新的元素")
             // 添加新的元素
             val newElement = document.createElement("View")
             newElement.setAttributeNS(
@@ -54,10 +83,11 @@ open class XmlInsertTask : DefaultTask() {
             )
             root.appendChild(newElement)
         } else {
-            // 在根标签中随机添加空格或回车
-            repeat(Random.nextInt(1, 50)) {
-                root.textContent += if (Random.nextBoolean()) " " else "\n"
-            }
+//            println("XmlInsertTask:> 在根标签中随机添加空格或回车")
+//            // 在根标签中随机添加空格或回车
+//            repeat(Random.nextInt(1, 50)) {
+//                root.textContent += if (Random.nextBoolean()) " " else "\n"
+//            }
         }
 
         val transformerFactory = TransformerFactory.newInstance()
