@@ -19,6 +19,8 @@ open class XmlInsertTask @Inject constructor(
 ) : DefaultTask() {
     private val guard: GuardExtension = guardExtension
 
+    private val views = arrayListOf("View", "TextView", "FrameLayout", "LinearLayout", "RelativeLayout")
+
     @TaskAction
     fun execute() {
         val androidProjects = allDependencyAndroidProjects()
@@ -36,12 +38,11 @@ open class XmlInsertTask @Inject constructor(
             try {
                 Files.walk(projectDir)
                     .filter {
-                        println("XmlInsertTask:> filter : ${it} >f  ${it.fileName}")
                         Files.isDirectory(it) && it.fileName.toString().startsWith("layout")
                     }
-                    .forEach { layoutDir ->
-                        println("XmlInsertTask:> ${layoutDir}")
-                        layoutDir.toFile().listFiles { file -> file.isFile && file.extension == "xml" }?.forEach { layoutFile ->
+                    .forEach { insertDir ->
+                        println("XmlInsertTask:> insertDir : ${insertDir} >f  ${insertDir.fileName}")
+                        insertDir.toFile().listFiles { file -> file.isFile && file.extension == "xml" }?.forEach { layoutFile ->
                             val tempFilePath = layoutFile.resolveSibling("${layoutFile.name}.temp").toPath()
                             println("XmlInsertTask:> ${tempFilePath}")
                             modifyXmlFile(layoutFile.toPath(), tempFilePath)
@@ -61,11 +62,11 @@ open class XmlInsertTask @Inject constructor(
 
         val viewType = root.tagName
         if (viewType == "ViewGroup" || viewType == "androidx.constraintlayout.widget.ConstraintLayout" ||
-            viewType == "LinearLayout" || viewType == "RelativeLayout" || viewType == "LinearLayout"
+            viewType == "LinearLayout" || viewType == "RelativeLayout" || viewType == "FrameLayout"
         ) {
             println("XmlInsertTask:> 添加新的元素")
             // 添加新的元素
-            val newElement = document.createElement("View")
+            val newElement = document.createElement(views.random())
             newElement.setAttributeNS(
                 "http://schemas.android.com/apk/res/android",
                 "android:layout_width",

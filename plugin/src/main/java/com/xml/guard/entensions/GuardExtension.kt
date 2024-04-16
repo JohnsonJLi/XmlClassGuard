@@ -32,4 +32,10 @@ open class GuardExtension(val name: String = "") {
     var assetsConfigPath: String? = null
 
     var ignoreRenameList: List<String>? = null
+
+    /**
+     * res 随机因子   0 : 完全随机
+     *              !0 : 固定增加   设置 1 固定增加1
+     */
+    var resRandomFactor: Int = 0
 }
