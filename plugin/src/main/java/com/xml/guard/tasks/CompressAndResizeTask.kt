@@ -40,11 +40,11 @@ open class CompressAndResizeTask @Inject constructor(
                 Files.walk(projectDir)
                     .filter {
                         val fileName = it.fileName.toString()
-                        Files.isDirectory(it) && (fileName.startsWith("layout") || fileName.startsWith("drawable"))
+                        Files.isDirectory(it) && (fileName.startsWith("drawable")|| fileName.startsWith("mipmap") )
                     }
                     .forEach { insertDir ->
-                        println("XmlInsertTask:> insertDir : ${insertDir} >f  ${insertDir.fileName}")
-                        insertDir.toFile().listFiles { file -> file.isFile && (file.extension == "jpg" || file.extension == "png" || file.extension == "webp") }?.forEach { inputFile ->
+                        println("XmlInsertTask:> compressDir : ${insertDir} >f  ${insertDir.fileName}")
+                        insertDir.toFile().listFiles { file -> file.isFile && (file.extension == "jpg" || file.extension == "png" /*|| file.extension == "webp"*/) }?.forEach { inputFile ->
                             val tempFilePath = inputFile.resolveSibling("${inputFile.name}.temp").toPath()
 
                             Thumbnails.of(inputFile.absolutePath)
