@@ -118,7 +118,7 @@ open class CompressAndResizeTask @Inject constructor(
                 val writer = writers.next()
                 val param = writer.getDefaultWriteParam()
                 param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
-//                param.setCompressionQuality(quality)
+                param.setCompressionQuality(quality)
 
                 // 写入压缩后的WebP图片
                 try {
