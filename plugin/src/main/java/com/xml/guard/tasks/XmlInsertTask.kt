@@ -19,11 +19,8 @@ import kotlin.random.Random
 open class XmlInsertTask @Inject constructor(
     guardExtension: GuardExtension
 ) : DefaultTask() {
+
     private val guard: GuardExtension = guardExtension
-
-    private val views = arrayListOf("View", "TextView", "FrameLayout", "LinearLayout", "RelativeLayout")
-    private val directions = arrayListOf("Start", "Bottom", "Top", "End", "Left", "Right", "")
-
     @TaskAction
     fun execute() {
         val androidProjects = allDependencyAndroidProjects()
@@ -34,6 +31,9 @@ open class XmlInsertTask @Inject constructor(
             }
         }
     }
+
+    private val views = arrayListOf("View", "TextView", "FrameLayout", "LinearLayout", "RelativeLayout")
+    private val directions = arrayListOf("Start", "Bottom", "Top", "End", "Left", "Right", "")
 
     private fun xmlInsert(projectDir: Path?) {
         if (!Files.notExists(projectDir) && Files.isDirectory(projectDir)) {
