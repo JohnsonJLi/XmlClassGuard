@@ -29,4 +29,15 @@ dependencies {
     compileOnly "com.bytedance.android:aabresguard-plugin:0.1.0"
     compileOnly 'com.tencent.mm:AndResGuard-gradle-plugin:1.2.21'
     implementation 'net.coobird:thumbnailator:0.4.20'
+    implementation 'com.twelvemonkeys.imageio:imageio-core:3.10.0'
+    implementation 'com.twelvemonkeys.imageio:imageio-metadata:3.10.0'
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.10.1'
+
+    implementation 'com.twelvemonkeys.common:common-lang:3.10.0'
+    implementation 'com.twelvemonkeys.common:common-io:3.10.0'
+    implementation 'com.twelvemonkeys.common:common-image:3.10.0'
+//    implementation 'org.sejda.imageio:webp-imageio:0.1.6'
+
+
+
 }
