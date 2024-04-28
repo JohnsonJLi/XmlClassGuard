@@ -4,6 +4,8 @@ import com.didiglobal.booster.transform.TransformContext
 import com.didiglobal.booster.transform.asm.ClassTransformer
 import com.didiglobal.booster.transform.asm.isAbstract
 import com.google.auto.service.AutoService
+import com.xiaoyu.lanling.plugin.junkcode.jcaction.JunkCodeMethodAction1
+import com.xiaoyu.lanling.plugin.junkcode.jcaction.JunkCodeMethodAction2
 import com.xiaoyu.lanling.plugin.junkcode.jcaction.*
 import com.xiaoyu.lanling.plugin.utils.*
 import org.objectweb.asm.Label
@@ -15,7 +17,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 
-@AutoService(ClassTransformer::class)
+//@AutoService(ClassTransformer::class)
 class JunkCodeTransformer : ClassTransformer {
 
     companion object {
@@ -144,6 +146,12 @@ class JunkCodeTransformer : ClassTransformer {
                     method.instructions?.iterator()?.forEach {
                         if ((it.opcode >= IRETURN && it.opcode <= RETURN)/* || it.opcode == ATHROW*/) {
 
+
+                            instructions.insertBefore(it,MethodInsnNode(INVOKESTATIC, "com/jc/instrument/JCTools", "performance", "()Z", false))
+                            val labelIf = LabelNode()
+                            instructions.insertBefore(it,JumpInsnNode(IFEQ, labelIf))
+
+
                             val startTry = LabelNode(Label())
                             val endTry = LabelNode(Label())
                             val startCatch = LabelNode(Label())
@@ -212,6 +220,7 @@ class JunkCodeTransformer : ClassTransformer {
                             instructions.insertBefore(it, VarInsnNode(ALOAD, ivar))
                             instructions.insertBefore(it, MethodInsnNode(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V", false))
                             instructions.insertBefore(it, label3)
+                            instructions.insertBefore(it, labelIf)
                             return@forEach
                         }
                     }

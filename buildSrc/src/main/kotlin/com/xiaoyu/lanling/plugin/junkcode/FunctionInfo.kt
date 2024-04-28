@@ -47,12 +47,7 @@ data class FunctionInfo(val methodName: String, val inParameter: List<String>? =
     fun defInParameter(methodVisitor: MethodVisitor, klass: ClassNode) {
         inParameter?.forEach { lastInParam ->
             if (lastInParam.isStringDescriptor) {
-                if (JunkCodeTransformer.random.nextBoolean()) {
-                    methodVisitor.visitLdcInsn(JunkCodeTransformer.generateName())
-                } else {
-                    methodVisitor.visitVarInsn(Opcodes.ALOAD, 0);
-                    methodVisitor.visitFieldInsn(Opcodes.GETFIELD, klass.name, JunkCodeTransformer.FIELD_NAME_FROM, "Ljava/lang/String;");
-                }
+                getDefString(methodVisitor, klass)
             } else if (lastInParam.isBooleanDescriptor) {
                 methodVisitor.visitInsn(if (JunkCodeTransformer.random.nextBoolean()) Opcodes.ICONST_1 else Opcodes.ICONST_0)
             } else if (lastInParam.isIntDescriptor) {
@@ -60,6 +55,15 @@ data class FunctionInfo(val methodName: String, val inParameter: List<String>? =
             } else if (lastInParam.isDoubleDescriptor) {
                 methodVisitor.visitLdcInsn(JunkCodeTransformer.random.nextDouble())
             }
+        }
+    }
+
+    fun getDefString(methodVisitor: MethodVisitor, klass: ClassNode) {
+        if (JunkCodeTransformer.random.nextBoolean()) {
+            methodVisitor.visitLdcInsn(JunkCodeTransformer.generateName())
+        } else {
+            methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
+            methodVisitor.visitFieldInsn(Opcodes.GETFIELD, klass.name, JunkCodeTransformer.FIELD_NAME_FROM, "Ljava/lang/String;")
         }
     }
 

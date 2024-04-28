@@ -101,8 +101,6 @@ open class CompressAndResizeTask @Inject constructor(
             // 读取第一帧作为原始图像
             val originalImage = reader.read(0)
 
-            // ... 其他代码保持不变 ...
-
             // 计算缩放后的尺寸
             val scaledWidth = (originalImage.width * scale).toInt()
             val scaledHeight = (originalImage.height * scale).toInt()

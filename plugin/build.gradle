@@ -37,7 +37,7 @@ dependencies {
     implementation 'com.twelvemonkeys.common:common-io:3.10.0'
     implementation 'com.twelvemonkeys.common:common-image:3.10.0'
 //    implementation 'org.sejda.imageio:webp-imageio:0.1.6'
-
+//    implementation "com.didiglobal.booster:booster-transform-asm:$booster_version"
 
 
 }

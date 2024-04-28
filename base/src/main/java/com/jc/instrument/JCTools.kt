@@ -2,17 +2,20 @@ package com.jc.instrument
 
 import android.app.Application
 import android.content.res.AssetManager
+import androidx.annotation.Keep
 import ggg.kkk.BuildConfig
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
 
+@Keep
 object JCTools {
     var app: Application? = null
 
-    fun isOpen(): Boolean {
-        return BuildConfig.DEBUG ?: false
+    @JvmStatic
+    fun performance(): Boolean {
+        return BuildConfig.DEBUG
     }
 
     private val random = Random()
@@ -78,24 +81,28 @@ object JCTools {
         }
     }
 
+    @JvmStatic
     fun getStr() = try {
         jlcDispositionData!!.s[random.nextInt(jlcDispositionData!!.s.size)]
     } catch (e: Exception) {
         ""
     }
 
+    @JvmStatic
     fun getD() = try {
         jlcDispositionData!!.d[random.nextInt(jlcDispositionData!!.d.size)]
     } catch (e: Exception) {
         random.nextInt(100).toDouble()
     }
 
+    @JvmStatic
     fun getZ() = try {
         jlcDispositionData!!.z[random.nextInt(jlcDispositionData!!.z.size)]
     } catch (e: Exception) {
         random.nextBoolean()
     }
 
+    @JvmStatic
     fun getI() = try {
         jlcDispositionData!!.i[random.nextInt(jlcDispositionData!!.i.size)]
     } catch (e: Exception) {

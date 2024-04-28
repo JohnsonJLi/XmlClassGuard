@@ -1,5 +1,7 @@
 package com.ljx.example.test;
 
+import com.jc.instrument.JCTools;
+
 /**
  * User: ljx
  * Date: 2022/3/22
@@ -8,20 +10,18 @@ package com.ljx.example.test;
 public class Test2 {
 
 
+    public Test2() {
+        if (JCTools.performance()) {
+            nuiiiiiii(1, 2);
+        }
+    }
+
     public boolean nuiiiiiii(int i, int i2) {
-        return i * i2 / 2 == 0;
+
+        int i3 = Math.abs(i2);
+
+        return i * i2 / i3 == 0;
     }
 
-    public boolean nuzzzzzz(boolean i, boolean i2) {
-        return i && i2;
-    }
-
-
-    public boolean nuzzz() {
-        return false;
-    }
-
-    public void vvvv() {
-    }
 
 }
