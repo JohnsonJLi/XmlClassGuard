@@ -55,7 +55,7 @@ open class CompressAndResizeTask @Inject constructor(
                     }
                     .forEach { insertDir ->
                         println("XmlInsertTask:> compressDir : ${insertDir} >f  ${insertDir.fileName}")
-                        insertDir.toFile().listFiles { file -> file.isFile && file.extension in listOf("jpg", "png", "webp") }?.forEach { inputFile ->
+                        insertDir.toFile().listFiles { file -> file.isFile && file.extension in listOf("jpg", "png"/*, "webp"*/) }?.forEach { inputFile ->
                             println("Processed image: ${inputFile.name}   >exists  ${inputFile.exists()}  >canRead  ${inputFile.canRead()}")
                             val tempFilePath = File("${inputFile.parent}/${inputFile.nameWithoutExtension}_temp.png")
 
