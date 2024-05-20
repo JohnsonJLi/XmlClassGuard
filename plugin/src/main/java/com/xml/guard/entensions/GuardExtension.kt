@@ -38,4 +38,9 @@ open class GuardExtension(val name: String = "") {
      *              !0 : 固定增加   设置 1 固定增加1
      */
     var resRandomFactor: Int = 0
+
+    /**
+     * 混淆字典文件
+     */
+    var obfuscatedDictionaries: File? = null
 }

@@ -113,7 +113,7 @@ open class FlavorXmlClassGuardTask @Inject constructor(
                 println("isObfuscated : $classPath")
                 continue
             }
-            val obfuscatePath = mapping.renamePath(classPath, guardExtension.flavor!!)
+            val obfuscatePath = mapping.renamePath(classPath, guardExtension)
             xmlText = xmlText.replaceWords(classPath, obfuscatePath)
             if (packageName != null && classPath.startsWith(packageName)) {
                 xmlText = xmlText.replaceWords(classPath.substring(packageName.length), obfuscatePath)
