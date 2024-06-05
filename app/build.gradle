@@ -6,7 +6,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 //apply from: 'aabresguard.gradle'
 
-apply from: 'xmlclassguard.gradle'
+//apply from: 'xmlclassguard.gradle'
 apply from: 'res_random_insertion_task.gradle'
 apply plugin: 'com.didiglobal.booster'
 

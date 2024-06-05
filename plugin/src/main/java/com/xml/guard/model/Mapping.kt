@@ -262,9 +262,9 @@ class Mapping {
     }
 
     private fun getSkitConfusionDictionaryList(guardExtension: GuardExtension?): List<String> {
-        return guardExtension?.let {
+        return guardExtension?.obfuscatedDictionaries?.let {
             val list = mutableListOf<String>()
-            it.obfuscatedDictionaries?.forEachLine { line ->
+            it.forEachLine { line ->
                 list.add(line.trim()) // 添加每一行到列表中，trim()用于移除可能的前导或尾随空白
             }
             list
